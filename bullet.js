@@ -24,4 +24,5 @@ Bullet.prototype.update = function() {
 	this.scale = new PIXI.Point(delta.y / this.dy,delta.y /this. dy);
 	this.x += this.speed.x;
 	this.y += this.speed.y;
+	if (g.enemies.collision(this)) dp("Collision!");
 }

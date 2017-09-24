@@ -3,7 +3,7 @@ SETLOCAL
 
 CD %dp0%
 SET STR=%1
-IF "%1"=="" SET STR=%date% %time%
+IF %STR%=="" SET STR=Build %date% %time%
 
 :: Compile JS into one file
 TYPE functions.js >> app.js
@@ -30,7 +30,7 @@ PAUSE
 
 :: Commit local changes
 git add .
-git commit -m "Build %STR%"
+git commit -m %STR%
 git push origin master
 
 :: Copy to local cawoodm github site
@@ -41,7 +41,7 @@ ECHO "Ready to test in cawoodm.github.io\tie-flighter\ folder"
 :: Publish to github
 CD ..\..\..\cawoodm.github.io\tie-flighter
 git add .
-git commit -m "Release %STR%"
+git commit -m %STR%
 git push origin master
 ECHO "Ready to test at http://cawoodm.github.io/tie-flighter/"
 START http://cawoodm.github.io/tie-flighter/

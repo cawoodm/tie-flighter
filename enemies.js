@@ -6,9 +6,9 @@ function Enemies(num) {
 	this.num = num;
 	this.speed = num.s || 0.5;
 	this.tex = g.ui.sprites["enemy"+num.id];
-	this.scaler = 1;//0.5;
+	this.scaler = 0.5;
 	this.spacing = 10;
-	//this.width = num.x * this.tex.width;
+	this.width = this.num.x * (this.tex.width + this.spacing);
 	for (let i=0; i < num.x; i++) {
 		this.guys[i] = [];
 		for (let j=0; j < num.y; j++) {
@@ -20,15 +20,17 @@ function Enemies(num) {
 		}
 	}
 	
-	this.x = g.ui.width/2;// - this.width/2;
+	this.x = g.ui.width/2 - this.width/2;
 	this.y = g.ui.height * 0.2;
 	this.tag = "enemies";
-	this.pivot.set(this.width / 2, this.height / 2);
 }
 Enemies.prototype = Object.create(PIXI.Container.prototype);
 Enemies.prototype.update = function() {
-	let d = (this.y - g.ui.horizon)/g.ui.horizon;
+	//let d = (this.y - g.ui.horizon)/g.ui.horizon;
+	let d = 1;
 	this.scale = new PIXI.Point(d,d);
+	this.width = d * this.num.x * (this.tex.width + this.spacing);
+	this.x = g.ui.width/2 - this.width/2;
 	this.y += this.speed; 
 	if (this.y + this.height > g.ui.playzone) {
 		return g.entity.remove(this);
@@ -43,4 +45,15 @@ Enemies.prototype.update = function() {
 	// 	let d = (this.y - g.ui.horizon)/g.ui.horizon;
 	// 	//this.scale = new PIXI.Point(d,d);
 	// }
-}
+};
+Enemies.prototype.collision = function(ent) {
+	for (let i in this.children) {
+		let enemy = this.children[i];
+		let ab = enemy.getBounds();
+		let bb = ent.getBounds();
+		if (ab.x + ab.width > bb.x && ab.x < bb.x + bb.width && ab.y + ab.height > bb.y && ab.y < bb.y + bb.height) {
+			enemy.destroy();	
+			return true;
+		}
+	}
+};

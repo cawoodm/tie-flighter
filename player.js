@@ -12,7 +12,7 @@ Player.prototype.init = function() {
 	this.speed = new Vector(0, 0);
 	this.acc = new Vector(0, 0);
 	this.position.x=200;
-	this.position.y=300;
+	this.position.y=g.ui.playzone;
 	this.zOrder = 10;
 	g.ui.stage.addChild(this);
 	// TODO: Make a force shield child toggle visibility via mySprite.alpha = 0;
@@ -25,7 +25,7 @@ Player.prototype.init = function() {
 }
 Player.prototype.update = function(delta) {
 	// Move with mouse
-	this.position.x = g.ui.renderer.plugins.interaction.mouse.global.x;
+	this.setPosition({x:g.ui.renderer.plugins.interaction.mouse.global.x});
 	return
 	if (this.position.x<0) {
 		this.position.x=0;
@@ -41,4 +41,8 @@ Player.prototype.update = function(delta) {
 	this.speed.x+=this.acc.y;
 	this.position.x+=this.speed.x*delta;
 	this.position.y+=this.speed.y*delta;
+}
+Player.prototype.setPosition = function(pos,a) {
+	if (pos.x<0) return; // Mobile device
+	this.position.x = Math.max(this.width/2, Math.min(pos.x, g.ui.width-this.width/2))
 }

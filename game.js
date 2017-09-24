@@ -1,6 +1,6 @@
 // Setup rendering surface
 //g.app = new PIXI.Application({width: 400, height:400});
-/*global Ticker Player Background Starfield*/
+/*global Ticker Player Background Enemies Starfield*/
 g.start = function() {
 	this.ticker = new Ticker(this.ui.fps, function (delta) {
 		g.gameUpdate(delta);
@@ -8,7 +8,7 @@ g.start = function() {
 		g.gameRender();
 	});
 	g.ticker.start();
-}
+};
 
 g.halt=function() {
 	if (g.ticker.state=="stop") {
@@ -16,7 +16,7 @@ g.halt=function() {
 	} else {
 		g.ticker.stop();
 	}
-}
+};
 
 g.restart = function() {
 	g.scenes = {
@@ -29,23 +29,26 @@ g.restart = function() {
 	g.player = new Player();
 	g.entity.add(g.player);
 	g.entity.add(new Starfield());
+	g.enemies = new Enemies({x:3,y:1,n:0,s:1});
+	g.entity.add(g.enemies);
 	g.start();
-}
+};
 g.entity.add = function(ent) {
 	g.scene.entities.push(ent);
 	if (typeof ent.renderer === "undefined") g.ui.stage.addChild(ent);
 	if (typeof ent.init === "function") ent.init();
-}
+};
 g.entity.remove = function(ent) {
+	ent.destroy();
 	g.ui.stage.removeChild(ent);
 	for(let i=0; i < g.scene.entities.length; i++)
 		if (g.scene.entities[i] == ent) g.scene.entities.splice(i,1);
-}
+};
 g.gameUpdate = function(delta) {
 	g.scene.entities.forEach(function(ent) {
 		if (typeof ent.update === "function") ent.update(delta);
 	}, this);
-}
+};
 g.gameRender = function() {
 	
 	if (g.fpsMeter) g.fpsMeter.tick();
@@ -59,4 +62,4 @@ g.gameRender = function() {
 	g.ctx.save();
 	g.ui.renderer.render(g.ui.stage);
 	g.ctx.restore();
-}
+};

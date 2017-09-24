@@ -10,7 +10,7 @@ Ticker.prototype.start = function() {
 	this.state = "go";
 	this.lastUpdate=this.lastDraw=window.performance.now();
 	this.loop();
-}
+};
 
 Ticker.prototype.loop = function() {
 	
@@ -33,8 +33,8 @@ Ticker.prototype.loop = function() {
 		this.lastDraw = now - (drawDiff % this._frameMillis);
 		this._renderCallback();
 	}
-}
+};
 
 Ticker.prototype.stop = function() {
 	this.state="stop";
-}
+};

@@ -1,8 +1,8 @@
 let g = {
 	ui: {
-		fps:60
-		,width:400
-		,height:400
+		fps: 60
+		,size: 400
+		,scale: 1
 		,sprites: {}
 	}
 	,state: ""
@@ -10,7 +10,12 @@ let g = {
 	,player: {}
 	,keys: {}
 };
-
+// Use max of screen
+g.ui.scale = Math.max(document.body.clientWidth, document.body.clientHeight)/400;
+g.ui.width = g.ui.scale * g.ui.size;
+g.ui.height = g.ui.scale * g.ui.size;
+g.ui.horizon = g.ui.height * 0.2;
+g.ui.playzone = g.ui.height * 0.9;
 //PIXI.utils.skipHello()
 g.ui.renderer = new PIXI.CanvasRenderer({
 	width: g.ui.width
@@ -33,9 +38,14 @@ g.fpsMeter = new FPSMeter($("#debug"), {graph: 1, history: 20, theme: "transpare
 
 PIXI.loader
 	.add("sprites", "sprites.png")
+	//.add("enemies", "enemies.sprites.png")
+	.add("enemies", "enemies.sprites.json")
 	.load(function() {
 		g.ui.sprites.base = PIXI.loader.resources.sprites.texture.baseTexture;
+		g.ui.sprites.enemies = PIXI.loader.resources.enemies.textures;
 		g.ui.sprites.player = new PIXI.Texture(g.ui.sprites.base, new PIXI.Rectangle(0, 0, 160, 110));
 		g.ui.sprites.bullet = new PIXI.Texture(g.ui.sprites.base, new PIXI.Rectangle(0, 110, 60, 110));
+		g.ui.sprites.enemy0 = g.ui.sprites.enemies["enemy0.png"];
 		g.restart();
 	});
+	

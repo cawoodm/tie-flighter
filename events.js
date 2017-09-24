@@ -1,9 +1,9 @@
 /*global Bullet*/
 g.ui.keys = {
-	left: keyboard(["a", "ArrowLeft"]) // left arrow
-	,right: keyboard(["d", "ArrowRight"]) // right arrow
-	,fire: keyboard(" ") // space
-	,fireM: keyboard("click") // space
+	left: Keyboard(["a", "ArrowLeft"]) // left arrow
+	,right: Keyboard(["d", "ArrowRight"]) // right arrow
+	,fire: Keyboard(" ") // space
+	,fireM: Keyboard("click") // space
 };
 
 g.ui.keys.left.down = function() {
@@ -16,12 +16,15 @@ g.ui.keys.right.down = function() {
 	if (g.player.speed.x<=0) {g.player.acc.x = 0.1; g.player.speed.x = 0.75;}
 	//dp("Right", g.player.speed.x,g.player.acc.x);
 };
-g.ui.keys.fire.press = function() {
-	if (g.player) g.entity.add(new Bullet(g.player.position));
+g.ui.keys.fire.press = function(e) {
+	if (g.player.position) {
+		if (e.touches) g.player.setPosition({x:e.touches[0].clientX-g.ui.canvas.offsetLeft},true);
+		g.entity.add(new Bullet(g.player.position));
+	}
 }
 g.ui.keys.fireM.press = g.ui.keys.fire.press;
 
-function keyboard(keyCode) {
+function Keyboard(keyCode) {
 	var key = {};
 	key.codes = keyCode;
 	key.isDown = false;
@@ -46,7 +49,7 @@ function keyboard(keyCode) {
 		}
 	};
 	key.clickHandler = function(event) {
-		key.press();
+		key.press(event);
 		event.preventDefault();
 	}
 

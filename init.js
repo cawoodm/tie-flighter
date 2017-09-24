@@ -11,7 +11,15 @@ let g = {
 	,keys: {}
 };
 // Use max of screen
-g.ui.scale = Math.max(document.body.clientWidth, document.body.clientHeight)/400;
+var uniwin = {
+	width: window.innerWidth || document.documentElement.clientWidth
+		|| document.body.offsetWidth,
+	height: window.innerHeight || document.documentElement.clientHeight
+		|| document.body.offsetHeight
+};
+
+g.ui.scale = Math.min(uniwin.width, uniwin.height)/400;
+dp(g.ui.scale,uniwin.width, uniwin.height);
 g.ui.width = g.ui.scale * g.ui.size;
 g.ui.height = g.ui.scale * g.ui.size;
 g.ui.horizon = g.ui.height * 0.2;

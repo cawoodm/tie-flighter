@@ -40722,7 +40722,7 @@ function Enemies(num) {
 	PIXI.Container.call(this);
 	this.guys = [];
 	num.id = num.id||"0";
-	this.anchor = {x: 0.5,y: 0.5};
+	//this.anchor.set(0.5, 0.5);// = {x: 0.5,y: 0.5};
 	this.num = num;
 	this.speed = num.s || 0.5;
 	this.tex = g.ui.sprites["enemy"+num.id];
@@ -40743,25 +40743,26 @@ function Enemies(num) {
 	this.x = g.ui.width/2;// - this.width/2;
 	this.y = g.ui.height * 0.2;
 	this.tag = "enemies";
-	//this.pivot.set(this.width / 2, this.height / 2);
+	this.pivot.set(this.width / 2, this.height / 2);
 }
 Enemies.prototype = Object.create(PIXI.Container.prototype);
 Enemies.prototype.update = function() {
 	let d = (this.y - g.ui.horizon)/g.ui.horizon;
 	this.scale = new PIXI.Point(d,d);
-	this.y += this.speed; return;
+	this.y += this.speed; 
 	if (this.y + this.height > g.ui.playzone) {
 		return g.entity.remove(this);
-	} else if (this.x <= 0 || this.x + this.width >= g.ui.width) {
-		//this.y += this.tex.height*this.scaler/2;
-		if (this.x <= 0) this.x = 10; else this.x -= 10;
-		this.speed *= -1;
-	} else {
-		this.y += this.speed;
-		dp(this.y)
-		let d = (this.y - g.ui.horizon)/g.ui.horizon;
-		//this.scale = new PIXI.Point(d,d);
-	}
+	}// else if (this.x <= 0 || this.x + this.width >= g.ui.width) {
+	return
+	// 	//this.y += this.tex.height*this.scaler/2;
+	// 	if (this.x <= 0) this.x = 10; else this.x -= 10;
+	// 	this.speed *= -1;
+	// } else {
+	// 	this.y += this.speed;
+	// 	dp(this.y)
+	// 	let d = (this.y - g.ui.horizon)/g.ui.horizon;
+	// 	//this.scale = new PIXI.Point(d,d);
+	// }
 }
 // Setup rendering surface
 //g.app = new PIXI.Application({width: 400, height:400});

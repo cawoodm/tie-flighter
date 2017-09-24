@@ -2,33 +2,38 @@
 function Player() {
 	PIXI.Sprite.call(this, g.ui.sprites.player);
 	this.tag = "player";
-	this.width /= 2; // Resize sprite
-	//this.height /= 2;
-	this.anchor.set(0.5, 0.5);
-	this.size = new Vector(this.width, this.height);
+}
+
+Player.prototype = Object.create(PIXI.Sprite.prototype);
+Player.prototype.init = function() {
+	this.scale = new PIXI.Point(0.5, 0.5);
+	//this.pivot.set(this.width/2, this.height/2);
+	this.anchor = {x:0.5, y:0.5}
 	this.speed = new Vector(0, 0);
 	this.acc = new Vector(0, 0);
 	this.position.x=200;
 	this.position.y=300;
-	dp("1")//this.pivot)
+	this.zOrder = 10;
 	g.ui.stage.addChild(this);
+	// TODO: Make a force shield child toggle visibility via mySprite.alpha = 0;
+	//this.circle = new PIXI.Graphics();
+	// circle.beginFill(0x5cafe2);
+	// circle.drawCircle(0, 0, 80);
+	// circle.x = 320;
+	// circle.y = 180;
+	// g.app.stage.addChild(circle);
 }
-
-Player.prototype = Object.create(PIXI.Sprite.prototype);
-Player.prototype.init = function() {}
 Player.prototype.update = function(delta) {
-	//dp("DRAWING player ", this.position.x, this.position.y, delta.toFixed(2));
-	//this.center = new Vector(Math.min(g.ui.width, this.position.x), this.position.y+this.height/2)
+	// Move with mouse
 	this.position.x = g.ui.renderer.plugins.interaction.mouse.global.x;
-	//dp(this.position.x)
 	return
 	if (this.position.x<0) {
 		this.position.x=0;
 		this.acc.x=0;
 		this.speed.x=0;
 	}
-	if (this.position.x+this.size.x>g.ui.canvas.width) {
-		this.position.x=g.ui.canvas.width-this.size.x;
+	if (this.position.x+this.width>g.ui.canvas.width) {
+		this.position.x=g.ui.canvas.width-this.width;
 		this.acc.x=0;
 		this.speed.x=0;
 	}

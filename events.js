@@ -54,8 +54,8 @@ function keyboard(keyCode) {
 		window.addEventListener("keydown", key.downHandler.bind(key), false);
 		window.addEventListener("keyup", key.upHandler.bind(key), false);
 	} else {
-		window.addEventListener("mousedown", key.clickHandler.bind(key), false);
-		window.addEventListener("touchstart", key.clickHandler.bind(key), false);
+		document.body.addEventListener("mousedown", key.clickHandler.bind(key), false);
+		document.body.addEventListener("touchstart", key.clickHandler.bind(key), false);
 	}
 	return key;
 }

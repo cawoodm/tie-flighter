@@ -4,3 +4,4 @@ const dp = function() {
 	console.log.apply(console, args);
 };
 const $ = document.querySelector.bind(document);
+const rnd = function(min, max) {return Math.round(Math.random() * (max - min) + min)};

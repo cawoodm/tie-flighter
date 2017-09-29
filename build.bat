@@ -1,9 +1,11 @@
-@ECHO OFF
+
 SETLOCAL
 
 CD %dp0%
-SET STR=%1
-IF %STR%=="" SET STR=Build %date% %time%
+SET STR=%~1
+IF "%STR%"=="" (SET STR=Build %date% %time%)
+echo STR IS %STR%
+PAUSE
 
 :: Compile JS into one file
 TYPE functions.js >> app.js
@@ -26,22 +28,21 @@ DEL /Q app.js
 COPY /Y *.png release\
 COPY /Y *.json release\
 ECHO "Ready to test in release\ folder"
-PAUSE
+::PAUSE
 
 :: Commit local changes
 git add .
-git commit -m %STR%
+git commit -m "%STR%"
 git push origin master
 
 :: Copy to local cawoodm github site
 COPY /Y .\release\*.* ..\..\..\cawoodm.github.io\tie-flighter
-ECHO "Ready to test in cawoodm.github.io\tie-flighter\ folder"
 ::PAUSE
 
 :: Publish to github
 CD ..\..\..\cawoodm.github.io\tie-flighter
 git add .
-git commit -m %STR%
+git commit -m "%STR%""
 git push origin master
 ECHO "Ready to test at http://cawoodm.github.io/tie-flighter/"
 START http://cawoodm.github.io/tie-flighter/

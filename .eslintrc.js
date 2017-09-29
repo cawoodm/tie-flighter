@@ -5,6 +5,7 @@ module.exports = {
       ,"FPSMeter": false
       ,"PIXI": false
       ,"dp": false
+      ,"$": false
   }
   ,"env": {
     "browser": true

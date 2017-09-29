@@ -4,7 +4,7 @@ const dp = function() {
 	console.log.apply(console, args);
 };
 const $ = document.querySelector.bind(document);
-let Vector = function(x, y) {
+const rnd = function(min, max) {return Math.round(Math.random() * (max - min) + min)};let Vector = function(x, y) {
 	this.x = x || 0;
 	this.y = y || 0;
 	//this.area = () => this.x * this.y;
@@ -40458,7 +40458,8 @@ Ticker.prototype.loop = function() {
 Ticker.prototype.stop = function() {
 	this.state="stop";
 };
-let g = {
+/*global Enemies*/
+const g = {
 	ui: {
 		fps: 60
 		,size: 400
@@ -40470,20 +40471,18 @@ let g = {
 	,player: {}
 	,keys: {}
 };
-// Use max of screen
-var uniwin = {
-	width: window.innerWidth || document.documentElement.clientWidth
-		|| document.body.offsetWidth,
-	height: window.innerHeight || document.documentElement.clientHeight
-		|| document.body.offsetHeight
-};
 
-g.ui.scale = Math.min(uniwin.width, uniwin.height)/400;
-dp(g.ui.scale,uniwin.width, uniwin.height);
+// Use max of screen
+g.ui.win = {
+	width: window.innerWidth||document.documentElement.clientWidth||document.body.offsetWidth
+	,height: window.innerHeight||document.documentElement.clientHeight||document.body.offsetHeight
+};
+g.ui.scale = Math.min(g.ui.win.width, g.ui.win.height)/400;
 g.ui.width = g.ui.scale * g.ui.size;
 g.ui.height = g.ui.scale * g.ui.size;
-g.ui.horizon = g.ui.height * 0.2;
+g.ui.horizon = g.ui.height * 0.3;
 g.ui.playzone = g.ui.height * 0.9;
+
 //PIXI.utils.skipHello()
 g.ui.renderer = new PIXI.CanvasRenderer({
 	width: g.ui.width
@@ -40499,21 +40498,18 @@ g.ui.stage = new PIXI.Container();
 g.ui.renderer.render(g.ui.stage)
 g.ui.interaction = new PIXI.interaction.InteractionData();
 
-//let circle = new PIXI.Graphics();circle.beginFill(0x5cafe2);circle.drawCircle(0, 0, 80);circle.x = 100;circle.y = 100;
-//g.ui.stage.addChild(circle);
-
 g.fpsMeter = new FPSMeter($("#debug"), {graph: 1, history: 20, theme: "transparent", heat: 1});
 
 PIXI.loader
 	.add("sprites", "sprites.png")
-	//.add("enemies", "enemies.sprites.png")
 	.add("enemies", "enemies.sprites.json")
+	.add("explosion", "explosion.sprites.json")
 	.load(function() {
 		g.ui.sprites.base = PIXI.loader.resources.sprites.texture.baseTexture;
 		g.ui.sprites.enemies = PIXI.loader.resources.enemies.textures;
 		g.ui.sprites.player = new PIXI.Texture(g.ui.sprites.base, new PIXI.Rectangle(0, 0, 160, 110));
 		g.ui.sprites.bullet = new PIXI.Texture(g.ui.sprites.base, new PIXI.Rectangle(0, 110, 60, 110));
-		g.ui.sprites.enemy0 = g.ui.sprites.enemies["enemy0.png"];
+		Enemies.initSprites();
 		g.restart();
 	});
 	/*global Bullet*/
@@ -40521,7 +40517,8 @@ g.ui.keys = {
 	left: Keyboard(["a", "ArrowLeft"]) // left arrow
 	,right: Keyboard(["d", "ArrowRight"]) // right arrow
 	,fire: Keyboard(" ") // space
-	,fireM: Keyboard("click") // space
+	,fireM: Keyboard("click") // Mouse click
+	,debug: Keyboard("clickCtrl") // Mouse click
 };
 
 g.ui.keys.left.down = function() {
@@ -40535,6 +40532,10 @@ g.ui.keys.right.down = function() {
 	//dp("Right", g.player.speed.x,g.player.acc.x);
 };
 g.ui.keys.fire.press = function(e) {
+	if (e.ctrlKey) {
+		Enemies.add();
+		return;
+	}
 	if (g.player.position) {
 		if (e.touches) g.player.setPosition({x:e.touches[0].clientX-g.ui.canvas.offsetLeft},true);
 		g.entity.add(new Bullet(g.player.position));
@@ -40544,7 +40545,7 @@ g.ui.keys.fireM.press = g.ui.keys.fire.press;
 
 function Keyboard(keyCode) {
 	var key = {};
-	key.codes = keyCode;
+	key.codes = Array.isArray(keyCode)?keyCode:[keyCode];
 	key.isDown = false;
 	key.isUp = true;
 
@@ -40571,12 +40572,12 @@ function Keyboard(keyCode) {
 		event.preventDefault();
 	}
 
-	if (keyCode!="click") {
+	if (keyCode!=="click") {
 		window.addEventListener("keydown", key.downHandler.bind(key), false);
 		window.addEventListener("keyup", key.upHandler.bind(key), false);
 	} else {
-		document.body.addEventListener("mousedown", key.clickHandler.bind(key), false);
-		document.body.addEventListener("touchstart", key.clickHandler.bind(key), false);
+		g.ui.canvas.addEventListener("mousedown", key.clickHandler.bind(key), false);
+		g.ui.canvas.addEventListener("touchstart", key.clickHandler.bind(key), false);
 	}
 	return key;
 }
@@ -40699,83 +40700,109 @@ function Bullet(pos) {
 	this.x = pos.x;
 	this.y = pos.y;
 	let dx1 = (g.ui.width / 2 - pos.x) / g.ui.width / 2;
+	this.collider = new PIXI.Rectangle(26, 28, 6, 50);
 	this.goal = {
 		x: g.ui.width / 2 - dx1 * g.ui.width
 		,y: g.ui.height * 0.2
 	};
 	this.dx = this.goal.x - pos.x;
 	this.dy = this.goal.y - pos.y;
-	this.lifetime = 10;
+	this.lifetime = 20;
 	this.speed = new Vector(this.dx / this.lifetime,this.dy / this.lifetime);
 	this.rotation = Math.PI / 2 + Math.atan2(this.dy, this.dx);
 	this.zOrder = g.player.zOrder - 1
 }
 Bullet.prototype = Object.create(PIXI.Sprite.prototype);
 Bullet.prototype.update = function() {
+	if (this.dieNext) return g.entity.remove(this);
 	let delta = new Vector(this.goal.x - this.x, this.goal.y - this.y);
 	if (delta.y / this.dy < 0.1) return g.entity.remove(this);
 	this.scale = new PIXI.Point(delta.y / this.dy,delta.y /this. dy);
 	this.x += this.speed.x;
 	this.y += this.speed.y;
-	if (g.enemies.collision(this)) dp("Collision!");
+	let box = new PIXI.Rectangle(this.x+this.collider.x, this.y+this.collider.y,this.collider.width, this.collider.height);
+	if (g.enemies.collision(box)) this.dieNext=true;
 }
 function Enemies(num) {
 	PIXI.Container.call(this);
 	this.guys = [];
 	num.id = num.id||"0";
-	//this.anchor.set(0.5, 0.5);// = {x: 0.5,y: 0.5};
 	this.num = num;
-	this.speed = num.s || 0.5;
-	this.tex = g.ui.sprites["enemy"+num.id];
-	this.scaler = 0.5;
-	this.spacing = 10;
-	this.width = this.num.x * (this.tex.width + this.spacing);
+	this.speed = num.hasOwnProperty("s")?num.s:0.2;
+	this.tex = g.ui.sprites.enemies[num.id+".png"];
+	this.spacing = 30;
+	//this.width = this.num.x * (this.tex.width + this.spacing);
+	this.scaler = 0.2; //100/this.tex.width;
 	for (let i=0; i < num.x; i++) {
 		this.guys[i] = [];
 		for (let j=0; j < num.y; j++) {
 			let guy = this.guys[i][j] = new PIXI.Sprite(this.tex);
-			guy.x = (this.tex.width + this.spacing) * i;
-			guy.y = (this.tex.height + this.spacing) * j;
+			guy.x = this.scaler*(this.tex.width + this.spacing) * i;
+			guy.y = this.scaler*(this.tex.height + this.spacing) * j;
+			guy.tag = i+","+j;
 			guy.scale = new PIXI.Point(this.scaler, this.scaler);
 			this.addChild(guy);
 		}
 	}
 	
 	this.x = g.ui.width/2 - this.width/2;
-	this.y = g.ui.height * 0.2;
+	this.y = g.ui.horizon;
 	this.tag = "enemies";
 }
+Enemies.add = function(options) {
+	let o = options||{};
+	o.x = o.x||3;
+	o.y = o.y||1;//rnd(1,2);
+	o.num = o.num||rnd(0,53);
+	if (g.enemies && g.enemies.children) g.entity.remove(g.enemies);
+	g.enemies = new Enemies(o);
+	g.entity.add(g.enemies);
+}
+Enemies.initSprites = function() {
+	var frames = [];
+	for (let i=0; i<10; i++)
+		frames.push(PIXI.Texture.fromFrame("ex" + i + ".png"));
+	this.exploder = new PIXI.extras.AnimatedSprite(frames);
+};
 Enemies.prototype = Object.create(PIXI.Container.prototype);
 Enemies.prototype.update = function() {
-	//let d = (this.y - g.ui.horizon)/g.ui.horizon;
-	let d = 1;
+	let d = 0.3 + 0.5*(this.y - g.ui.horizon)/g.ui.horizon;
 	this.scale = new PIXI.Point(d,d);
-	this.width = d * this.num.x * (this.tex.width + this.spacing);
 	this.x = g.ui.width/2 - this.width/2;
 	this.y += this.speed; 
 	if (this.y + this.height > g.ui.playzone) {
 		return g.entity.remove(this);
-	}// else if (this.x <= 0 || this.x + this.width >= g.ui.width) {
-	return
-	// 	//this.y += this.tex.height*this.scaler/2;
-	// 	if (this.x <= 0) this.x = 10; else this.x -= 10;
-	// 	this.speed *= -1;
-	// } else {
-	// 	this.y += this.speed;
-	// 	dp(this.y)
-	// 	let d = (this.y - g.ui.horizon)/g.ui.horizon;
-	// 	//this.scale = new PIXI.Point(d,d);
-	// }
+	}
 };
-Enemies.prototype.collision = function(ent) {
+Enemies.prototype.collision = function(bb) {
+	
+	let collided = false;
 	for (let i in this.children) {
 		let enemy = this.children[i];
+		if (!enemy.visible) continue;
 		let ab = enemy.getBounds();
-		let bb = ent.getBounds();
+		dp(ab.x + ab.width, bb.x, ab.x + ab.width > bb.x)
 		if (ab.x + ab.width > bb.x && ab.x < bb.x + bb.width && ab.y + ab.height > bb.y && ab.y < bb.y + bb.height) {
-			enemy.destroy();	
-			return true;
+			console.log("Hit", enemy.tag, bb, ab)
+			enemy.visible=false; // destroy() messes up parent container	
+			Enemies.exploder.x = ab.x;
+			Enemies.exploder.y = ab.y;
+			Enemies.exploder.anchor.set(0.5);
+			Enemies.exploder.animationSpeed = 0.5;
+			Enemies.exploder.play()
+			collided = true;
 		}
+		if (collided) break;
+	}
+	if (!collided) return;
+	let vis = this.children.reduce(function(acc, curr) {
+		return parseInt(acc.visible?1:acc) + parseInt(curr.visible?1:0);
+	});
+	dp("enemies left=", vis)
+	if (vis==0) {
+		dp("destroyed")
+		g.entity.remove(this);
+		Enemies.add();
 	}
 };
 // Setup rendering surface
@@ -40809,8 +40836,7 @@ g.restart = function() {
 	g.player = new Player();
 	g.entity.add(g.player);
 	g.entity.add(new Starfield());
-	g.enemies = new Enemies({x:3,y:1,n:0,s:1});
-	g.entity.add(g.enemies);
+	Enemies.add();
 	g.start();
 };
 g.entity.add = function(ent) {

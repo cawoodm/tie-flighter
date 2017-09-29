@@ -3,7 +3,8 @@ g.ui.keys = {
 	left: Keyboard(["a", "ArrowLeft"]) // left arrow
 	,right: Keyboard(["d", "ArrowRight"]) // right arrow
 	,fire: Keyboard(" ") // space
-	,fireM: Keyboard("click") // space
+	,fireM: Keyboard("click") // Mouse click
+	,debug: Keyboard("clickCtrl") // Mouse click
 };
 
 g.ui.keys.left.down = function() {
@@ -17,6 +18,10 @@ g.ui.keys.right.down = function() {
 	//dp("Right", g.player.speed.x,g.player.acc.x);
 };
 g.ui.keys.fire.press = function(e) {
+	if (e.ctrlKey) {
+		Enemies.add();
+		return;
+	}
 	if (g.player.position) {
 		if (e.touches) g.player.setPosition({x:e.touches[0].clientX-g.ui.canvas.offsetLeft},true);
 		g.entity.add(new Bullet(g.player.position));
@@ -26,7 +31,7 @@ g.ui.keys.fireM.press = g.ui.keys.fire.press;
 
 function Keyboard(keyCode) {
 	var key = {};
-	key.codes = keyCode;
+	key.codes = Array.isArray(keyCode)?keyCode:[keyCode];
 	key.isDown = false;
 	key.isUp = true;
 
@@ -53,12 +58,12 @@ function Keyboard(keyCode) {
 		event.preventDefault();
 	}
 
-	if (keyCode!="click") {
+	if (keyCode!=="click") {
 		window.addEventListener("keydown", key.downHandler.bind(key), false);
 		window.addEventListener("keyup", key.upHandler.bind(key), false);
 	} else {
-		document.body.addEventListener("mousedown", key.clickHandler.bind(key), false);
-		document.body.addEventListener("touchstart", key.clickHandler.bind(key), false);
+		g.ui.canvas.addEventListener("mousedown", key.clickHandler.bind(key), false);
+		g.ui.canvas.addEventListener("touchstart", key.clickHandler.bind(key), false);
 	}
 	return key;
 }

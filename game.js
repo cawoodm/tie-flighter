@@ -29,8 +29,7 @@ g.restart = function() {
 	g.player = new Player();
 	g.entity.add(g.player);
 	g.entity.add(new Starfield());
-	g.enemies = new Enemies({x:3,y:1,n:0,s:1});
-	g.entity.add(g.enemies);
+	Enemies.add();
 	g.start();
 };
 g.entity.add = function(ent) {

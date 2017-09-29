@@ -1,4 +1,5 @@
-let g = {
+/*global Enemies*/
+const g = {
 	ui: {
 		fps: 60
 		,size: 400
@@ -10,20 +11,18 @@ let g = {
 	,player: {}
 	,keys: {}
 };
-// Use max of screen
-var uniwin = {
-	width: window.innerWidth || document.documentElement.clientWidth
-		|| document.body.offsetWidth,
-	height: window.innerHeight || document.documentElement.clientHeight
-		|| document.body.offsetHeight
-};
 
-g.ui.scale = Math.min(uniwin.width, uniwin.height)/400;
-dp(g.ui.scale,uniwin.width, uniwin.height);
+// Use max of screen
+g.ui.win = {
+	width: window.innerWidth||document.documentElement.clientWidth||document.body.offsetWidth
+	,height: window.innerHeight||document.documentElement.clientHeight||document.body.offsetHeight
+};
+g.ui.scale = Math.min(g.ui.win.width, g.ui.win.height)/400;
 g.ui.width = g.ui.scale * g.ui.size;
 g.ui.height = g.ui.scale * g.ui.size;
-g.ui.horizon = g.ui.height * 0.2;
+g.ui.horizon = g.ui.height * 0.3;
 g.ui.playzone = g.ui.height * 0.9;
+
 //PIXI.utils.skipHello()
 g.ui.renderer = new PIXI.CanvasRenderer({
 	width: g.ui.width
@@ -39,21 +38,18 @@ g.ui.stage = new PIXI.Container();
 g.ui.renderer.render(g.ui.stage)
 g.ui.interaction = new PIXI.interaction.InteractionData();
 
-//let circle = new PIXI.Graphics();circle.beginFill(0x5cafe2);circle.drawCircle(0, 0, 80);circle.x = 100;circle.y = 100;
-//g.ui.stage.addChild(circle);
-
 g.fpsMeter = new FPSMeter($("#debug"), {graph: 1, history: 20, theme: "transparent", heat: 1});
 
 PIXI.loader
 	.add("sprites", "sprites.png")
-	//.add("enemies", "enemies.sprites.png")
 	.add("enemies", "enemies.sprites.json")
+	.add("explosion", "explosion.sprites.json")
 	.load(function() {
 		g.ui.sprites.base = PIXI.loader.resources.sprites.texture.baseTexture;
 		g.ui.sprites.enemies = PIXI.loader.resources.enemies.textures;
 		g.ui.sprites.player = new PIXI.Texture(g.ui.sprites.base, new PIXI.Rectangle(0, 0, 160, 110));
 		g.ui.sprites.bullet = new PIXI.Texture(g.ui.sprites.base, new PIXI.Rectangle(0, 110, 60, 110));
-		g.ui.sprites.enemy0 = g.ui.sprites.enemies["enemy0.png"];
+		Enemies.initSprites();
 		g.restart();
 	});
 	

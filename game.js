@@ -1,5 +1,3 @@
-// Setup rendering surface
-//g.app = new PIXI.Application({width: 400, height:400});
 /*global Ticker Player Background Enemies Starfield*/
 g.start = function() {
 	this.ticker = new Ticker(this.ui.fps, function (delta) {
@@ -9,15 +7,20 @@ g.start = function() {
 	});
 	g.ticker.start();
 };
-
-g.halt=function() {
+g.pause=function() {
 	if (g.ticker.state=="stop") {
 		g.ticker.start();
 	} else {
 		g.ticker.stop();
 	}
 };
-
+g.halt=function(){
+	g.ticker.stop();
+}
+g.step=function() {
+	g.gameUpdate(1);
+	g.gameRender();
+}
 g.restart = function() {
 	g.scenes = {
 		menu: {entities: []}
@@ -61,4 +64,23 @@ g.gameRender = function() {
 	g.ctx.save();
 	g.ui.renderer.render(g.ui.stage);
 	g.ctx.restore();
+
+	g.drawGrid();
+	
+	g.scene.entities.forEach(function(ent) {
+		if (typeof ent.postRenderer === "function") ent.postRenderer();
+	}, this);
 };
+g.drawGrid = function() {
+	g.ctx.save();
+	g.ctx.strokeStyle="#ddd";
+	for (let x=0; x<g.ui.width; x+=10) {
+		g.ctx.moveTo(x, 0);
+		g.ctx.lineTo(x, g.ui.height);
+	}
+	for (let y=0; y<g.ui.height; y+=10) {
+		g.ctx.moveTo(0, y);
+		g.ctx.lineTo(g.ui.width, y);
+	}
+	g.ctx.restore();
+}

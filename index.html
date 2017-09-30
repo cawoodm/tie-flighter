@@ -2,7 +2,11 @@
 <meta charset = "utf-8"> 
 <title>Tie Flighter</title>
 <body>
-  <div id="debug"><button style="float:right" onclick="g.halt()">||</button></div>
+  <div id="debug">
+    <button style="float:right" onclick="g.pause(event);">||</button>
+    <button style="float:right" onclick="g.halt();event.preventDefault();">[]</button>
+    <button style="float:right" onclick="g.step();event.preventDefault();">&gt;&gt;</button>
+  </div>
   <script src="functions.js"></script>
   <script src="utils.js"></script>
   <script src="pixi.js"></script>

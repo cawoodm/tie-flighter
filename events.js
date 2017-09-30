@@ -62,8 +62,9 @@ function Keyboard(keyCode) {
 		window.addEventListener("keydown", key.downHandler.bind(key), false);
 		window.addEventListener("keyup", key.upHandler.bind(key), false);
 	} else {
-		g.ui.canvas.addEventListener("mousedown", key.clickHandler.bind(key), false);
-		g.ui.canvas.addEventListener("touchstart", key.clickHandler.bind(key), false);
+		//g.ui.canvas
+		document.addEventListener("mousedown", key.clickHandler.bind(key), false);
+		document.addEventListener("touchstart", key.clickHandler.bind(key), false);
 	}
 	return key;
 }

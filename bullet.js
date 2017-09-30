@@ -7,7 +7,7 @@ function Bullet(pos) {
 	this.y = pos.y;
 	let dx1 = (g.ui.width / 2 - pos.x) / g.ui.width / 2;
 	this.collider = new PIXI.Rectangle(26, 28, 6, 50);
-	this.goal = {
+	this.goal = {	
 		x: g.ui.width / 2 - dx1 * g.ui.width
 		,y: g.ui.height * 0.2
 	};
@@ -26,6 +26,8 @@ Bullet.prototype.update = function() {
 	this.scale = new PIXI.Point(delta.y / this.dy,delta.y /this. dy);
 	this.x += this.speed.x;
 	this.y += this.speed.y;
-	let box = new PIXI.Rectangle(this.x+this.collider.x, this.y+this.collider.y,this.collider.width, this.collider.height);
+}
+Bullet.prototype.postRenderer = function() {
+	let box = new PIXI.Rectangle(this.x-this.collider.width/2, this.y-this.collider.height/2,this.collider.width, this.collider.height);
 	if (g.enemies.collision(box)) this.dieNext=true;
 }

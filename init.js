@@ -37,7 +37,8 @@ document.body.appendChild(g.ui.canvas);
 g.ui.stage = new PIXI.Container();
 g.ui.renderer.render(g.ui.stage)
 g.ui.interaction = new PIXI.interaction.InteractionData();
-
+window.setInterval(dpuu, 100);
+//window.DEBUG=1;
 g.fpsMeter = new FPSMeter($("#debug"), {graph: 1, history: 20, theme: "transparent", heat: 1});
 
 PIXI.loader

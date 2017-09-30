@@ -3,6 +3,19 @@ const dp = function() {
 	for (let a in arguments) args.push(typeof arguments[a] == "number"?arguments[a].toFixed(2):arguments[a])
 	console.log.apply(console, args);
 };
+const dpu = function(msg) {
+	g.debugText=msg;
+}
+const dpuu = function() {
+	if(!g || !g.ctx) return;
+	g.debugText = "x:"+g.ui.renderer.plugins.interaction.mouse.global.x+",y:"+g.ui.renderer.plugins.interaction.mouse.global.y;
+	g.ctx.save();
+	g.ctx.fillStyle="#000";
+	g.ctx.fillRect(200,20,300,20);
+	g.ctx.fillStyle="#fff";
+	g.ctx.fillText(g.debugText,200,20);
+	g.ctx.restore();
+};
 const $ = document.querySelector.bind(document);
 const rnd = function(min, max) {return Math.round(Math.random() * (max - min) + min)};let Vector = function(x, y) {
 	this.x = x || 0;
@@ -40497,7 +40510,8 @@ document.body.appendChild(g.ui.canvas);
 g.ui.stage = new PIXI.Container();
 g.ui.renderer.render(g.ui.stage)
 g.ui.interaction = new PIXI.interaction.InteractionData();
-
+window.setInterval(dpuu, 100);
+//window.DEBUG=1;
 g.fpsMeter = new FPSMeter($("#debug"), {graph: 1, history: 20, theme: "transparent", heat: 1});
 
 PIXI.loader
@@ -40576,8 +40590,9 @@ function Keyboard(keyCode) {
 		window.addEventListener("keydown", key.downHandler.bind(key), false);
 		window.addEventListener("keyup", key.upHandler.bind(key), false);
 	} else {
-		g.ui.canvas.addEventListener("mousedown", key.clickHandler.bind(key), false);
-		g.ui.canvas.addEventListener("touchstart", key.clickHandler.bind(key), false);
+		//g.ui.canvas
+		document.addEventListener("mousedown", key.clickHandler.bind(key), false);
+		document.addEventListener("touchstart", key.clickHandler.bind(key), false);
 	}
 	return key;
 }
@@ -40701,7 +40716,7 @@ function Bullet(pos) {
 	this.y = pos.y;
 	let dx1 = (g.ui.width / 2 - pos.x) / g.ui.width / 2;
 	this.collider = new PIXI.Rectangle(26, 28, 6, 50);
-	this.goal = {
+	this.goal = {	
 		x: g.ui.width / 2 - dx1 * g.ui.width
 		,y: g.ui.height * 0.2
 	};
@@ -40720,93 +40735,98 @@ Bullet.prototype.update = function() {
 	this.scale = new PIXI.Point(delta.y / this.dy,delta.y /this. dy);
 	this.x += this.speed.x;
 	this.y += this.speed.y;
-	let box = new PIXI.Rectangle(this.x+this.collider.x, this.y+this.collider.y,this.collider.width, this.collider.height);
+}
+Bullet.prototype.postRenderer = function() {
+	let box = new PIXI.Rectangle(this.x-this.collider.width/2, this.y-this.collider.height/2,this.collider.width, this.collider.height);
 	if (g.enemies.collision(box)) this.dieNext=true;
 }
 function Enemies(num) {
 	PIXI.Container.call(this);
 	this.guys = [];
-	num.id = num.id||"0";
+	num.id = num.num||"0";
 	this.num = num;
-	this.speed = num.hasOwnProperty("s")?num.s:0.2;
+	this.speed = num.hasOwnProperty("s")?num.s:0.5;
 	this.tex = g.ui.sprites.enemies[num.id+".png"];
 	this.spacing = 30;
 	//this.width = this.num.x * (this.tex.width + this.spacing);
 	this.scaler = 0.2; //100/this.tex.width;
+	this.visible = false;
+	//this.scaler = 1;
 	for (let i=0; i < num.x; i++) {
 		this.guys[i] = [];
 		for (let j=0; j < num.y; j++) {
 			let guy = this.guys[i][j] = new PIXI.Sprite(this.tex);
 			guy.x = this.scaler*(this.tex.width + this.spacing) * i;
+			dp(i, guy.x)
 			guy.y = this.scaler*(this.tex.height + this.spacing) * j;
 			guy.tag = i+","+j;
 			guy.scale = new PIXI.Point(this.scaler, this.scaler);
 			this.addChild(guy);
 		}
 	}
-	
+	dp(this.children[0].width, this.children[1].x)
 	this.x = g.ui.width/2 - this.width/2;
 	this.y = g.ui.horizon;
 	this.tag = "enemies";
 }
 Enemies.add = function(options) {
 	let o = options||{};
-	o.x = o.x||3;
-	o.y = o.y||1;//rnd(1,2);
+	o.x = o.x||rnd(3,8);
+	o.y = o.y||rnd(1,2);
 	o.num = o.num||rnd(0,53);
 	if (g.enemies && g.enemies.children) g.entity.remove(g.enemies);
 	g.enemies = new Enemies(o);
 	g.entity.add(g.enemies);
 }
 Enemies.initSprites = function() {
-	var frames = [];
+	this.explosion = [];
 	for (let i=0; i<10; i++)
-		frames.push(PIXI.Texture.fromFrame("ex" + i + ".png"));
-	this.exploder = new PIXI.extras.AnimatedSprite(frames);
+		this.explosion.push(PIXI.Texture.fromFrame("ex" + i + ".png"));
 };
 Enemies.prototype = Object.create(PIXI.Container.prototype);
 Enemies.prototype.update = function() {
-	let d = 0.3 + 0.5*(this.y - g.ui.horizon)/g.ui.horizon;
+	this.visible = true;
+	let d = 0.8 + 0.5*(this.y - g.ui.horizon)/g.ui.horizon;
 	this.scale = new PIXI.Point(d,d);
-	this.x = g.ui.width/2 - this.width/2;
+	this.myWidth = (this.children[0].width)*this.num.x + this.spacing*d;
+	this.x = g.ui.width/2 - this.myWidth/2;
 	this.y += this.speed; 
 	if (this.y + this.height > g.ui.playzone) {
-		return g.entity.remove(this);
+		return Enemies.add();
 	}
 };
 Enemies.prototype.collision = function(bb) {
-	
 	let collided = false;
 	for (let i in this.children) {
 		let enemy = this.children[i];
-		if (!enemy.visible) continue;
+		if (enemy.alpha==0) continue;
 		let ab = enemy.getBounds();
-		dp(ab.x + ab.width, bb.x, ab.x + ab.width > bb.x)
 		if (ab.x + ab.width > bb.x && ab.x < bb.x + bb.width && ab.y + ab.height > bb.y && ab.y < bb.y + bb.height) {
-			console.log("Hit", enemy.tag, bb, ab)
-			enemy.visible=false; // destroy() messes up parent container	
-			Enemies.exploder.x = ab.x;
-			Enemies.exploder.y = ab.y;
-			Enemies.exploder.anchor.set(0.5);
-			Enemies.exploder.animationSpeed = 0.5;
-			Enemies.exploder.play()
+			//console.log("Hit", enemy.tag, bb, ab)
+			enemy.destroy();collided=true;
+			//enemy.visible=false; // destroy() messes up parent container	
+			enemy.alpha=0; // destroy() messes up parent container
+			let exploder = new PIXI.extras.AnimatedSprite(Enemies.explosion);
+			exploder.loop=false;
+			exploder.x = ab.x+ab.width/2;
+			exploder.y = ab.y+ab.height/2;
+			exploder.anchor.set(0.5);
+			exploder.animationSpeed = 0.5;
+			exploder.play()
+			exploder.scale = this.scale;
+			g.ui.stage.addChild(exploder);
+			exploder.onComplete = function(){exploder.destroy()};
 			collided = true;
+			break;
 		}
 		if (collided) break;
 	}
 	if (!collided) return;
-	let vis = this.children.reduce(function(acc, curr) {
-		return parseInt(acc.visible?1:acc) + parseInt(curr.visible?1:0);
-	});
-	dp("enemies left=", vis)
-	if (vis==0) {
-		dp("destroyed")
-		g.entity.remove(this);
+	if (this.children.length==0) {
 		Enemies.add();
 	}
+	return true;
 };
-// Setup rendering surface
-//g.app = new PIXI.Application({width: 400, height:400});
 /*global Ticker Player Background Enemies Starfield*/
 g.start = function() {
 	this.ticker = new Ticker(this.ui.fps, function (delta) {
@@ -40816,15 +40836,20 @@ g.start = function() {
 	});
 	g.ticker.start();
 };
-
-g.halt=function() {
+g.pause=function() {
 	if (g.ticker.state=="stop") {
 		g.ticker.start();
 	} else {
 		g.ticker.stop();
 	}
 };
-
+g.halt=function(){
+	g.ticker.stop();
+}
+g.step=function() {
+	g.gameUpdate(1);
+	g.gameRender();
+}
 g.restart = function() {
 	g.scenes = {
 		menu: {entities: []}
@@ -40868,4 +40893,23 @@ g.gameRender = function() {
 	g.ctx.save();
 	g.ui.renderer.render(g.ui.stage);
 	g.ctx.restore();
+
+	g.drawGrid();
+	
+	g.scene.entities.forEach(function(ent) {
+		if (typeof ent.postRenderer === "function") ent.postRenderer();
+	}, this);
 };
+g.drawGrid = function() {
+	g.ctx.save();
+	g.ctx.strokeStyle="#ddd";
+	for (let x=0; x<g.ui.width; x+=10) {
+		g.ctx.moveTo(x, 0);
+		g.ctx.lineTo(x, g.ui.height);
+	}
+	for (let y=0; y<g.ui.height; y+=10) {
+		g.ctx.moveTo(0, y);
+		g.ctx.lineTo(g.ui.width, y);
+	}
+	g.ctx.restore();
+}

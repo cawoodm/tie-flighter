@@ -1,11 +1,9 @@
-
+@ECHO OFF
 SETLOCAL
-
 CD %dp0%
+
 SET STR=%~1
 IF "%STR%"=="" (SET STR=Build %date% %time%)
-echo STR IS %STR%
-PAUSE
 
 :: Compile JS into one file
 TYPE functions.js >> app.js

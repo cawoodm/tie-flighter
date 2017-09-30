@@ -20,5 +20,6 @@ module.exports = {
       ,"no-trailing-spaces": 0
       ,"semi": ["warn", "always"]
       ,"quotes": ["warn", "double"]
+      ,"no-unreachable": "warn"
   }
 };

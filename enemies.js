@@ -6,23 +6,19 @@ function Enemies(num) {
 	this.speed = num.hasOwnProperty("s")?num.s:0.5;
 	this.tex = g.ui.sprites.enemies[num.id+".png"];
 	this.spacing = 30;
-	//this.width = this.num.x * (this.tex.width + this.spacing);
 	this.scaler = 0.2; //100/this.tex.width;
 	this.visible = false;
-	//this.scaler = 1;
 	for (let i=0; i < num.x; i++) {
 		this.guys[i] = [];
 		for (let j=0; j < num.y; j++) {
 			let guy = this.guys[i][j] = new PIXI.Sprite(this.tex);
 			guy.x = this.scaler*(this.tex.width + this.spacing) * i;
-			dp(i, guy.x)
 			guy.y = this.scaler*(this.tex.height + this.spacing) * j;
 			guy.tag = i+","+j;
 			guy.scale = new PIXI.Point(this.scaler, this.scaler);
 			this.addChild(guy);
 		}
 	}
-	dp(this.children[0].width, this.children[1].x)
 	this.x = g.ui.width/2 - this.width/2;
 	this.y = g.ui.horizon;
 	this.tag = "enemies";
@@ -41,16 +37,46 @@ Enemies.initSprites = function() {
 	for (let i=0; i<10; i++)
 		this.explosion.push(PIXI.Texture.fromFrame("ex" + i + ".png"));
 };
+Enemies.doExplosion = function(options) {
+	let exploder = new PIXI.extras.AnimatedSprite(Enemies.explosion);
+	exploder.loop=false;
+	exploder.x = options.x;
+	exploder.y = options.y;
+	exploder.anchor.set(0.5);
+	exploder.animationSpeed = 0.5;
+	exploder.scale = new PIXI.Point(options.scale||1, options.scale||1);
+	exploder.play();
+	g.ui.stage.addChild(exploder);
+	if (options.complete == "gameOver") {
+		exploder.onComplete = function() {
+			exploder.destroy();
+			g.gameOver();
+		}
+	} else {
+		exploder.onComplete = function() {
+			exploder.destroy();
+		}
+	}
+};
 Enemies.prototype = Object.create(PIXI.Container.prototype);
 Enemies.prototype.update = function() {
+	if (this.freeze) return;
 	this.visible = true;
 	let d = 0.8 + 0.5*(this.y - g.ui.horizon)/g.ui.horizon;
 	this.scale = new PIXI.Point(d,d);
 	this.myWidth = (this.children[0].width)*this.num.x + this.spacing*d;
 	this.x = g.ui.width/2 - this.myWidth/2;
 	this.y += this.speed; 
-	if (this.y + this.height > g.ui.playzone) {
-		return Enemies.add();
+	if (this.y + this.height > g.ui.playzone-g.player.height/2) {
+		// Game Over
+		this.freeze=true;
+		Enemies.doExplosion({
+			x: g.player.x
+			,y: g.player.y
+			,scale: g.player.scale.x
+			,complete: "gameOver"
+		});
+		g.entity.remove(g.player);
 	}
 };
 Enemies.prototype.collision = function(bb) {
@@ -60,20 +86,12 @@ Enemies.prototype.collision = function(bb) {
 		if (enemy.alpha==0) continue;
 		let ab = enemy.getBounds();
 		if (ab.x + ab.width > bb.x && ab.x < bb.x + bb.width && ab.y + ab.height > bb.y && ab.y < bb.y + bb.height) {
-			//console.log("Hit", enemy.tag, bb, ab)
-			enemy.destroy();collided=true;
-			//enemy.visible=false; // destroy() messes up parent container	
-			enemy.alpha=0; // destroy() messes up parent container
-			let exploder = new PIXI.extras.AnimatedSprite(Enemies.explosion);
-			exploder.loop=false;
-			exploder.x = ab.x+ab.width/2;
-			exploder.y = ab.y+ab.height/2;
-			exploder.anchor.set(0.5);
-			exploder.animationSpeed = 0.5;
-			exploder.play()
-			exploder.scale = this.scale;
-			g.ui.stage.addChild(exploder);
-			exploder.onComplete = function(){exploder.destroy()};
+			enemy.destroy();
+			Enemies.doExplosion({
+				x:ab.x+ab.width/2
+				,y:ab.y+ab.height/2
+				,scale: this.scale.x
+			});
 			collided = true;
 			break;
 		}

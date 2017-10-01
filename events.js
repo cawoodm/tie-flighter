@@ -18,8 +18,9 @@ g.ui.keys.right.down = function() {
 	//dp("Right", g.player.speed.x,g.player.acc.x);
 };
 g.ui.keys.fire.press = function(e) {
+	if (g.state=="gameOver") return;
 	if (e.ctrlKey) {
-		Enemies.add();
+		//Enemies.add();
 		return;
 	}
 	if (g.player.position) {

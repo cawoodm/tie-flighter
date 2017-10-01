@@ -40510,7 +40510,7 @@ document.body.appendChild(g.ui.canvas);
 g.ui.stage = new PIXI.Container();
 g.ui.renderer.render(g.ui.stage)
 g.ui.interaction = new PIXI.interaction.InteractionData();
-window.setInterval(dpuu, 100);
+//window.setInterval(dpuu, 100);
 //window.DEBUG=1;
 g.fpsMeter = new FPSMeter($("#debug"), {graph: 1, history: 20, theme: "transparent", heat: 1});
 
@@ -40523,6 +40523,7 @@ PIXI.loader
 		g.ui.sprites.enemies = PIXI.loader.resources.enemies.textures;
 		g.ui.sprites.player = new PIXI.Texture(g.ui.sprites.base, new PIXI.Rectangle(0, 0, 160, 110));
 		g.ui.sprites.bullet = new PIXI.Texture(g.ui.sprites.base, new PIXI.Rectangle(0, 110, 60, 110));
+		g.ui.sprites.gameOver = new PIXI.Texture(g.ui.sprites.base, new PIXI.Rectangle(0, 220, 220, 110));
 		Enemies.initSprites();
 		g.restart();
 	});
@@ -40546,8 +40547,9 @@ g.ui.keys.right.down = function() {
 	//dp("Right", g.player.speed.x,g.player.acc.x);
 };
 g.ui.keys.fire.press = function(e) {
+	if (g.state=="gameOver") return;
 	if (e.ctrlKey) {
-		Enemies.add();
+		//Enemies.add();
 		return;
 	}
 	if (g.player.position) {
@@ -40663,19 +40665,17 @@ Starfield.prototype.render2 = function() {
 function Player() {
 	PIXI.Sprite.call(this, g.ui.sprites.player);
 	this.tag = "player";
-}
-
-Player.prototype = Object.create(PIXI.Sprite.prototype);
-Player.prototype.init = function() {
 	this.scale = new PIXI.Point(0.5, 0.5);
-	//this.pivot.set(this.width/2, this.height/2);
 	this.anchor = {x:0.5, y:0.5}
 	this.speed = new Vector(0, 0);
 	this.acc = new Vector(0, 0);
 	this.position.x=200;
 	this.position.y=g.ui.playzone;
 	this.zOrder = 10;
-	g.ui.stage.addChild(this);
+}
+
+Player.prototype = Object.create(PIXI.Sprite.prototype);
+Player.prototype.init = function() {
 	// TODO: Make a force shield child toggle visibility via mySprite.alpha = 0;
 	//this.circle = new PIXI.Graphics();
 	// circle.beginFill(0x5cafe2);
@@ -40687,21 +40687,6 @@ Player.prototype.init = function() {
 Player.prototype.update = function(delta) {
 	// Move with mouse
 	this.setPosition({x:g.ui.renderer.plugins.interaction.mouse.global.x});
-	return
-	if (this.position.x<0) {
-		this.position.x=0;
-		this.acc.x=0;
-		this.speed.x=0;
-	}
-	if (this.position.x+this.width>g.ui.canvas.width) {
-		this.position.x=g.ui.canvas.width-this.width;
-		this.acc.x=0;
-		this.speed.x=0;
-	}
-	this.speed.x+=this.acc.x;
-	this.speed.x+=this.acc.y;
-	this.position.x+=this.speed.x*delta;
-	this.position.y+=this.speed.y*delta;
 }
 Player.prototype.setPosition = function(pos,a) {
 	if (pos.x<0) return; // Mobile device
@@ -40748,23 +40733,19 @@ function Enemies(num) {
 	this.speed = num.hasOwnProperty("s")?num.s:0.5;
 	this.tex = g.ui.sprites.enemies[num.id+".png"];
 	this.spacing = 30;
-	//this.width = this.num.x * (this.tex.width + this.spacing);
 	this.scaler = 0.2; //100/this.tex.width;
 	this.visible = false;
-	//this.scaler = 1;
 	for (let i=0; i < num.x; i++) {
 		this.guys[i] = [];
 		for (let j=0; j < num.y; j++) {
 			let guy = this.guys[i][j] = new PIXI.Sprite(this.tex);
 			guy.x = this.scaler*(this.tex.width + this.spacing) * i;
-			dp(i, guy.x)
 			guy.y = this.scaler*(this.tex.height + this.spacing) * j;
 			guy.tag = i+","+j;
 			guy.scale = new PIXI.Point(this.scaler, this.scaler);
 			this.addChild(guy);
 		}
 	}
-	dp(this.children[0].width, this.children[1].x)
 	this.x = g.ui.width/2 - this.width/2;
 	this.y = g.ui.horizon;
 	this.tag = "enemies";
@@ -40783,16 +40764,46 @@ Enemies.initSprites = function() {
 	for (let i=0; i<10; i++)
 		this.explosion.push(PIXI.Texture.fromFrame("ex" + i + ".png"));
 };
+Enemies.doExplosion = function(options) {
+	let exploder = new PIXI.extras.AnimatedSprite(Enemies.explosion);
+	exploder.loop=false;
+	exploder.x = options.x;
+	exploder.y = options.y;
+	exploder.anchor.set(0.5);
+	exploder.animationSpeed = 0.5;
+	exploder.scale = new PIXI.Point(options.scale||1, options.scale||1);
+	exploder.play();
+	g.ui.stage.addChild(exploder);
+	if (options.complete == "gameOver") {
+		exploder.onComplete = function() {
+			exploder.destroy();
+			g.gameOver();
+		}
+	} else {
+		exploder.onComplete = function() {
+			exploder.destroy();
+		}
+	}
+};
 Enemies.prototype = Object.create(PIXI.Container.prototype);
 Enemies.prototype.update = function() {
+	if (this.freeze) return;
 	this.visible = true;
 	let d = 0.8 + 0.5*(this.y - g.ui.horizon)/g.ui.horizon;
 	this.scale = new PIXI.Point(d,d);
 	this.myWidth = (this.children[0].width)*this.num.x + this.spacing*d;
 	this.x = g.ui.width/2 - this.myWidth/2;
 	this.y += this.speed; 
-	if (this.y + this.height > g.ui.playzone) {
-		return Enemies.add();
+	if (this.y + this.height > g.ui.playzone-g.player.height/2) {
+		// Game Over
+		this.freeze=true;
+		Enemies.doExplosion({
+			x: g.player.x
+			,y: g.player.y
+			,scale: g.player.scale.x
+			,complete: "gameOver"
+		});
+		g.entity.remove(g.player);
 	}
 };
 Enemies.prototype.collision = function(bb) {
@@ -40802,20 +40813,12 @@ Enemies.prototype.collision = function(bb) {
 		if (enemy.alpha==0) continue;
 		let ab = enemy.getBounds();
 		if (ab.x + ab.width > bb.x && ab.x < bb.x + bb.width && ab.y + ab.height > bb.y && ab.y < bb.y + bb.height) {
-			//console.log("Hit", enemy.tag, bb, ab)
-			enemy.destroy();collided=true;
-			//enemy.visible=false; // destroy() messes up parent container	
-			enemy.alpha=0; // destroy() messes up parent container
-			let exploder = new PIXI.extras.AnimatedSprite(Enemies.explosion);
-			exploder.loop=false;
-			exploder.x = ab.x+ab.width/2;
-			exploder.y = ab.y+ab.height/2;
-			exploder.anchor.set(0.5);
-			exploder.animationSpeed = 0.5;
-			exploder.play()
-			exploder.scale = this.scale;
-			g.ui.stage.addChild(exploder);
-			exploder.onComplete = function(){exploder.destroy()};
+			enemy.destroy();
+			Enemies.doExplosion({
+				x:ab.x+ab.width/2
+				,y:ab.y+ab.height/2
+				,scale: this.scale.x
+			});
 			collided = true;
 			break;
 		}
@@ -40837,7 +40840,9 @@ g.start = function() {
 	g.ticker.start();
 };
 g.pause=function() {
-	if (g.ticker.state=="stop") {
+	if (g.state=="gameOver") {
+		g.restart();
+	} else if (g.ticker.state=="stop") {
 		g.ticker.start();
 	} else {
 		g.ticker.stop();
@@ -40851,6 +40856,13 @@ g.step=function() {
 	g.gameRender();
 }
 g.restart = function() {
+	// Cleanup
+	if (g.scene) {
+		g.ui.stage.removeChildren();
+		g.scene.entities.length = 0;
+	}
+	g.state="play";
+	// New Game
 	g.scenes = {
 		menu: {entities: []}
 		,level1: {entities: []}
@@ -40874,6 +40886,18 @@ g.entity.remove = function(ent) {
 	g.ui.stage.removeChild(ent);
 	for(let i=0; i < g.scene.entities.length; i++)
 		if (g.scene.entities[i] == ent) g.scene.entities.splice(i,1);
+};
+
+g.gameOver = function() {
+	g.state="gameOver";
+	let go = new PIXI.Sprite(g.ui.sprites.gameOver);
+	go.anchor = {x:0.5, y:0.5};
+	go.tag="gameOver";
+	go.interactive=true;
+	go.x = g.ui.width/2;
+	go.y = g.ui.height/2;
+	g.ui.stage.addChild(go);
+	go.on("click", function() {g.restart()});
 };
 g.gameUpdate = function(delta) {
 	g.scene.entities.forEach(function(ent) {
@@ -40899,6 +40923,9 @@ g.gameRender = function() {
 	g.scene.entities.forEach(function(ent) {
 		if (typeof ent.postRenderer === "function") ent.postRenderer();
 	}, this);
+
+	if (g.state=="gameOver") g.halt();
+	
 };
 g.drawGrid = function() {
 	g.ctx.save();

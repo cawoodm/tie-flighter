@@ -37,7 +37,7 @@ document.body.appendChild(g.ui.canvas);
 g.ui.stage = new PIXI.Container();
 g.ui.renderer.render(g.ui.stage)
 g.ui.interaction = new PIXI.interaction.InteractionData();
-window.setInterval(dpuu, 100);
+//window.setInterval(dpuu, 100);
 //window.DEBUG=1;
 g.fpsMeter = new FPSMeter($("#debug"), {graph: 1, history: 20, theme: "transparent", heat: 1});
 
@@ -50,6 +50,7 @@ PIXI.loader
 		g.ui.sprites.enemies = PIXI.loader.resources.enemies.textures;
 		g.ui.sprites.player = new PIXI.Texture(g.ui.sprites.base, new PIXI.Rectangle(0, 0, 160, 110));
 		g.ui.sprites.bullet = new PIXI.Texture(g.ui.sprites.base, new PIXI.Rectangle(0, 110, 60, 110));
+		g.ui.sprites.gameOver = new PIXI.Texture(g.ui.sprites.base, new PIXI.Rectangle(0, 220, 220, 110));
 		Enemies.initSprites();
 		g.restart();
 	});

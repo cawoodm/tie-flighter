@@ -8,7 +8,9 @@ g.start = function() {
 	g.ticker.start();
 };
 g.pause=function() {
-	if (g.ticker.state=="stop") {
+	if (g.state=="gameOver") {
+		g.restart();
+	} else if (g.ticker.state=="stop") {
 		g.ticker.start();
 	} else {
 		g.ticker.stop();
@@ -22,6 +24,13 @@ g.step=function() {
 	g.gameRender();
 }
 g.restart = function() {
+	// Cleanup
+	if (g.scene) {
+		g.ui.stage.removeChildren();
+		g.scene.entities.length = 0;
+	}
+	g.state="play";
+	// New Game
 	g.scenes = {
 		menu: {entities: []}
 		,level1: {entities: []}
@@ -45,6 +54,18 @@ g.entity.remove = function(ent) {
 	g.ui.stage.removeChild(ent);
 	for(let i=0; i < g.scene.entities.length; i++)
 		if (g.scene.entities[i] == ent) g.scene.entities.splice(i,1);
+};
+
+g.gameOver = function() {
+	g.state="gameOver";
+	let go = new PIXI.Sprite(g.ui.sprites.gameOver);
+	go.anchor = {x:0.5, y:0.5};
+	go.tag="gameOver";
+	go.interactive=true;
+	go.x = g.ui.width/2;
+	go.y = g.ui.height/2;
+	g.ui.stage.addChild(go);
+	go.on("click", function() {g.restart()});
 };
 g.gameUpdate = function(delta) {
 	g.scene.entities.forEach(function(ent) {
@@ -70,6 +91,9 @@ g.gameRender = function() {
 	g.scene.entities.forEach(function(ent) {
 		if (typeof ent.postRenderer === "function") ent.postRenderer();
 	}, this);
+
+	if (g.state=="gameOver") g.halt();
+	
 };
 g.drawGrid = function() {
 	g.ctx.save();

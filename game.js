@@ -30,6 +30,7 @@ g.restart = function() {
 		g.scene.entities.length = 0;
 	}
 	g.state="play";
+	g.difficulty=1;
 	// New Game
 	g.scenes = {
 		menu: {entities: []}
@@ -86,7 +87,7 @@ g.gameRender = function() {
 	g.ui.renderer.render(g.ui.stage);
 	g.ctx.restore();
 
-	g.drawGrid1();
+	//g.drawGrid1();
 	
 	g.scene.entities.forEach(function(ent) {
 		if (typeof ent.postRenderer === "function") ent.postRenderer();

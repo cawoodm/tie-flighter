@@ -40671,8 +40671,13 @@ Player.prototype.init = function() {
 	// g.app.stage.addChild(circle);
 }
 Player.prototype.update = function(delta) {
+	if (this.dieNext) return g.entity.remove(this);
 	// Move with mouse
 	this.setPosition({x:g.ui.renderer.plugins.interaction.mouse.global.x});
+}
+Player.prototype.postRenderer = function() {
+	//let box = new PIXI.Rectangle(this.x-this.collider.width/2, this.y-this.collider.height/2,this.collider.width, this.collider.height);
+	if (g.enemies.collision(this, "player")) this.dieNext=true;
 }
 Player.prototype.setPosition = function(pos,a) {
 	if (pos.x<0) return; // Mobile device
@@ -40742,8 +40747,9 @@ function Enemies(num) {
 }
 Enemies.add = function(options) {
 	let o = options||{};
-	o.x = o.x||rnd(1,4);
-	o.y = o.y||rnd(10-o.x,5-o.x);
+	o.x = rnd(1,g.difficulty)
+	o.y = rnd(1,g.difficulty)
+	//o.y = o.y||rnd(10-o.x,5-o.x);
 	o.num = o.num||rnd(0,53);
 	if (g.enemies && g.enemies.children) g.entity.remove(g.enemies);
 	g.enemies = new Enemies(o);
@@ -40784,40 +40790,43 @@ Enemies.prototype.update = function() {
 	this.scale = new PIXI.Point(d,d);
 	this.myWidth = (this.children[0].width + this.spacing)*d*this.num.x;
 	this.x = g.ui.width/2 - this.width/2;
-	this.y += this.speed; 
-	if (this.y + this.height > g.ui.playzone-g.player.height/2) {
-		// Game Over
-		this.freeze=true;
-		Enemies.doExplosion({
-			x: g.player.x
-			,y: g.player.y
-			,scale: 3
-			,complete: "gameOver"
-		});
-	}
+	this.y += this.speed;
 };
-Enemies.prototype.collision = function(bb) {
+Enemies.prototype.collision = function(bb, mode) {
+	if (this.freeze || this.children.length==0) return;
+	if (this.delay++<0) return;
 	let collided = false;
 	for (let i in this.children) {
 		let enemy = this.children[i];
 		if (enemy.alpha==0) continue;
 		let ab = enemy.getBounds();
 		if (ab.x + ab.width > bb.x && ab.x < bb.x + bb.width && ab.y + ab.height > bb.y && ab.y < bb.y + bb.height) {
-			//enemy.destroy();
-			enemy.alpha = 0;
-			this.enemies--;
-			Enemies.doExplosion({
-				x:ab.x+ab.width/2
-				,y:ab.y+ab.height/2
-				,scale: this.scale.x
-			});
-			collided = true;
+			if (mode=="player") {
+				// Game Over
+				this.freeze=true;
+				Enemies.doExplosion({
+					x: g.player.x
+					,y: g.player.y
+					,scale: 3
+					,complete: "gameOver"
+				});
+			} else {
+				enemy.alpha = 0;
+				this.enemies--;
+				Enemies.doExplosion({
+					x:ab.x+ab.width/2
+					,y:ab.y+ab.height/2
+					,scale: this.scale.x
+				});
+				collided = true;
+			}
 			break;
 		}
 		if (collided) break;
 	}
 	if (!collided) return;
 	if (this.enemies==0||this.children.length==0) {
+		g.difficulty++;
 		Enemies.add();
 	}
 	return true;
@@ -40854,6 +40863,7 @@ g.restart = function() {
 		g.scene.entities.length = 0;
 	}
 	g.state="play";
+	g.difficulty=1;
 	// New Game
 	g.scenes = {
 		menu: {entities: []}
@@ -40910,7 +40920,7 @@ g.gameRender = function() {
 	g.ui.renderer.render(g.ui.stage);
 	g.ctx.restore();
 
-	g.drawGrid1();
+	//g.drawGrid1();
 	
 	g.scene.entities.forEach(function(ent) {
 		if (typeof ent.postRenderer === "function") ent.postRenderer();

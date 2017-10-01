@@ -22,8 +22,13 @@ Player.prototype.init = function() {
 	// g.app.stage.addChild(circle);
 }
 Player.prototype.update = function(delta) {
+	if (this.dieNext) return g.entity.remove(this);
 	// Move with mouse
 	this.setPosition({x:g.ui.renderer.plugins.interaction.mouse.global.x});
+}
+Player.prototype.postRenderer = function() {
+	//let box = new PIXI.Rectangle(this.x-this.collider.width/2, this.y-this.collider.height/2,this.collider.width, this.collider.height);
+	if (g.enemies.collision(this, "player")) this.dieNext=true;
 }
 Player.prototype.setPosition = function(pos,a) {
 	if (pos.x<0) return; // Mobile device

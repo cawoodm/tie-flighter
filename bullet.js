@@ -17,7 +17,7 @@ function Bullet(pos) {
 	this.speed = new Vector(this.dx / this.lifetime,this.dy / this.lifetime);
 	this.rotation = Math.PI / 2 + Math.atan2(this.dy, this.dx);
 	this.zOrder = g.player.zOrder - 1;
-	//g.resources.sfxLaser0.sound.play();
+	g.resources.sfxLaser0.sound.play();
 }
 Bullet.prototype = Object.create(PIXI.Sprite.prototype);
 Bullet.prototype.update = function() {

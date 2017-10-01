@@ -40512,6 +40512,9 @@ PIXI.loader
 		g.ui.sprites.player = new PIXI.Texture(g.ui.sprites.base, new PIXI.Rectangle(0, 0, 160, 110));
 		g.ui.sprites.bullet = new PIXI.Texture(g.ui.sprites.base, new PIXI.Rectangle(0, 110, 60, 110));
 		g.ui.sprites.gameOver = new PIXI.Texture(g.ui.sprites.base, new PIXI.Rectangle(0, 220, 220, 110));
+		resources.sfxLaser0.sound.volume = 0.5;
+		resources.sfxExplosion0.sound.volume = 0.5;
+		resources.sfxExplosion1.sound.volume = 0.5;
 		Enemies.initSprites();
 		g.restart();
 	});
@@ -40733,7 +40736,7 @@ function Bullet(pos) {
 	this.speed = new Vector(this.dx / this.lifetime,this.dy / this.lifetime);
 	this.rotation = Math.PI / 2 + Math.atan2(this.dy, this.dx);
 	this.zOrder = g.player.zOrder - 1;
-	//g.resources.sfxLaser0.sound.play();
+	g.resources.sfxLaser0.sound.play();
 }
 Bullet.prototype = Object.create(PIXI.Sprite.prototype);
 Bullet.prototype.update = function() {
@@ -40842,7 +40845,7 @@ Enemies.prototype.collision = function(bb, mode) {
 			if (mode=="player") {
 				// Game Over
 				this.freeze=true;
-				//g.resources.sfxExplosion1.sound.play();
+				g.resources.sfxExplosion1.sound.play();
 				Enemies.doExplosion({
 					x: g.player.x
 					,y: g.player.y
@@ -40852,7 +40855,7 @@ Enemies.prototype.collision = function(bb, mode) {
 			} else {
 				enemy.alpha = 0;
 				this.enemies--;
-				//g.resources.sfxExplosion0.sound.play();
+				g.resources.sfxExplosion0.sound.play();
 				Enemies.doExplosion({
 					x:ab.x+ab.width/2
 					,y:ab.y+ab.height/2

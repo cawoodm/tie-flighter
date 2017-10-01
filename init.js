@@ -54,6 +54,9 @@ PIXI.loader
 		g.ui.sprites.player = new PIXI.Texture(g.ui.sprites.base, new PIXI.Rectangle(0, 0, 160, 110));
 		g.ui.sprites.bullet = new PIXI.Texture(g.ui.sprites.base, new PIXI.Rectangle(0, 110, 60, 110));
 		g.ui.sprites.gameOver = new PIXI.Texture(g.ui.sprites.base, new PIXI.Rectangle(0, 220, 220, 110));
+		resources.sfxLaser0.sound.volume = 0.5;
+		resources.sfxExplosion0.sound.volume = 0.5;
+		resources.sfxExplosion1.sound.volume = 0.5;
 		Enemies.initSprites();
 		g.restart();
 	});

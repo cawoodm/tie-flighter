@@ -89,7 +89,7 @@ Enemies.prototype.collision = function(bb, mode) {
 			if (mode=="player") {
 				// Game Over
 				this.freeze=true;
-				//g.resources.sfxExplosion1.sound.play();
+				g.resources.sfxExplosion1.sound.play();
 				Enemies.doExplosion({
 					x: g.player.x
 					,y: g.player.y
@@ -99,7 +99,7 @@ Enemies.prototype.collision = function(bb, mode) {
 			} else {
 				enemy.alpha = 0;
 				this.enemies--;
-				//g.resources.sfxExplosion0.sound.play();
+				g.resources.sfxExplosion0.sound.play();
 				Enemies.doExplosion({
 					x:ab.x+ab.width/2
 					,y:ab.y+ab.height/2

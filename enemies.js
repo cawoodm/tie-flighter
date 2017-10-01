@@ -69,7 +69,7 @@ Enemies.prototype.update = function() {
 	if (this.freeze || this.children.length==0) return;
 	if (this.delay++<0) return;
 	this.visible = true;
-	let d = 0.5 + 0.9*(this.y - g.ui.horizon)/g.ui.horizon;
+	let d = 1 + 0.9*(this.y - g.ui.horizon)/g.ui.horizon;
 	this.scale = new PIXI.Point(d,d);
 	this.myWidth = (this.children[0].width + this.spacing)*d*this.num.x;
 	this.x = g.ui.width/2 - this.width/2;

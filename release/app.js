@@ -40512,9 +40512,10 @@ PIXI.loader
 	.add("sprites", "./resources/sprites/sprites.png")
 	.add("enemies", "./resources/sprites/enemies.sprites.json")
 	.add("explosion", "./resources/sprites/explosion.sprites.json")
-	.add("sfxLaser0", "./resources/sfx/sfx.laser0.mp3")
-	.add("sfxExplosion0", "./resources/sfx/sfx.explosion0.mp3")
-	.add("sfxExplosion1", "./resources/sfx/sfx.explosion1.mp3")
+	.add("sfxLaser0", "./resources/sounds/sfx.laser0.mp3")
+	.add("sfxExplosion0", "./resources/sounds/sfx.explosion0.mp3")
+	.add("sfxExplosion1", "./resources/sounds/sfx.explosion1.mp3")
+	.add("musicBg0", "./resources/sounds/music.bg0.mp3")
 	.load(function(loader, resources) {
 		g.resources = resources;
 		g.ui.sprites.base = resources.sprites.texture.baseTexture;
@@ -40525,6 +40526,7 @@ PIXI.loader
 		resources.sfxLaser0.sound.volume = 0.5;
 		resources.sfxExplosion0.sound.volume = 0.5;
 		resources.sfxExplosion1.sound.volume = 0.5;
+		resources.musicBg0.sound.volume = 0.15;
 		Enemies.initSprites();
 		g.restart();
 	});
@@ -40613,7 +40615,7 @@ Background.prototype.init = function() {
 }
 Background.drawFloorGrid = function() {
 	g.ctx.save();
-	g.ctx.strokeStyle="rgba(100, 100, 100, 0.2)";
+	g.ctx.strokeStyle="rgba(100, 100, 100, 0.3)";
 	for (let x=0; x<g.ui.width; x+=5) {
 		g.ctx.moveTo(x, g.ui.horizon);
 		let d = (g.ui.width/2-x)*40;
@@ -40835,7 +40837,7 @@ Enemies.prototype.update = function() {
 	if (this.freeze || this.children.length==0) return;
 	if (this.delay++<0) return;
 	this.visible = true;
-	let d = 0.5 + 0.9*(this.y - g.ui.horizon)/g.ui.horizon;
+	let d = 1 + 0.9*(this.y - g.ui.horizon)/g.ui.horizon;
 	this.scale = new PIXI.Point(d,d);
 	this.myWidth = (this.children[0].width + this.spacing)*d*this.num.x;
 	this.x = g.ui.width/2 - this.width/2;
@@ -40897,13 +40899,16 @@ g.pause=function() {
 	if (g.state=="gameOver") {
 		g.restart();
 	} else if (g.ticker.state=="stop") {
+		g.state="play";
 		g.ticker.start();
 	} else {
 		g.ticker.stop();
+		g.state="pause";
 	}
 };
-g.halt=function(){
+g.halt=function(state){
 	g.ticker.stop();
+	g.state=state||"halt";
 }
 g.step=function() {
 	g.gameUpdate(1);
@@ -40915,10 +40920,10 @@ g.restart = function() {
 		g.ui.stage.removeChildren();
 		g.scene.entities.length = 0;
 	}
+	// New Game
 	g.state="play";
 	g.points=0;
 	g.difficulty=1;
-	// New Game
 	g.scenes = {
 		menu: {entities: []}
 		,level1: {entities: []}
@@ -40933,6 +40938,7 @@ g.restart = function() {
 	g.pointsText.x = g.ui.width-30;
 	g.pointsText.y = 10;
 	Enemies.add();
+	g.resources.musicBg0.sound.play({loop:true});
 	g.start();
 };
 g.entity.add = function(ent) {
@@ -40949,6 +40955,7 @@ g.entity.remove = function(ent) {
 };
 g.gameOver = function() {
 	g.state="gameOver";
+	g.resources.musicBg0.sound.stop();
 	let go = new PIXI.Sprite(g.ui.sprites.gameOver);
 	go.anchor = {x:0.5, y:0.5};
 	go.tag="gameOver";
@@ -40958,7 +40965,8 @@ g.gameOver = function() {
 	g.ui.stage.addChild(go);
 };
 g.gameUpdate = function(delta) {
-	g.pointsText.text = " ".repeat(3-g.points.toString)+g.points;
+	g.pointsText.text = g.points;
+	g.pointsText.x = g.ui.width - 10 - (g.points.toString().length)*20;
 	g.scene.entities.forEach(function(ent) {
 		if (typeof ent.update === "function") ent.update(delta);
 	}, this);
@@ -40983,6 +40991,6 @@ g.gameRender = function() {
 		if (typeof ent.postRenderer === "function") ent.postRenderer();
 	}, this);
 
-	if (g.state=="gameOver") g.halt();
+	if (g.state=="gameOver") g.halt(g.state);
 	
 };

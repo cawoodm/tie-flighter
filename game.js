@@ -11,13 +11,16 @@ g.pause=function() {
 	if (g.state=="gameOver") {
 		g.restart();
 	} else if (g.ticker.state=="stop") {
+		g.state="play";
 		g.ticker.start();
 	} else {
 		g.ticker.stop();
+		g.state="pause";
 	}
 };
-g.halt=function(){
+g.halt=function(state){
 	g.ticker.stop();
+	g.state=state||"halt";
 }
 g.step=function() {
 	g.gameUpdate(1);
@@ -29,10 +32,10 @@ g.restart = function() {
 		g.ui.stage.removeChildren();
 		g.scene.entities.length = 0;
 	}
+	// New Game
 	g.state="play";
 	g.points=0;
 	g.difficulty=1;
-	// New Game
 	g.scenes = {
 		menu: {entities: []}
 		,level1: {entities: []}
@@ -47,6 +50,7 @@ g.restart = function() {
 	g.pointsText.x = g.ui.width-30;
 	g.pointsText.y = 10;
 	Enemies.add();
+	g.resources.musicBg0.sound.play({loop:true});
 	g.start();
 };
 g.entity.add = function(ent) {
@@ -63,6 +67,7 @@ g.entity.remove = function(ent) {
 };
 g.gameOver = function() {
 	g.state="gameOver";
+	g.resources.musicBg0.sound.stop();
 	let go = new PIXI.Sprite(g.ui.sprites.gameOver);
 	go.anchor = {x:0.5, y:0.5};
 	go.tag="gameOver";
@@ -72,7 +77,8 @@ g.gameOver = function() {
 	g.ui.stage.addChild(go);
 };
 g.gameUpdate = function(delta) {
-	g.pointsText.text = " ".repeat(3-g.points.toString)+g.points;
+	g.pointsText.text = g.points;
+	g.pointsText.x = g.ui.width - 10 - (g.points.toString().length)*20;
 	g.scene.entities.forEach(function(ent) {
 		if (typeof ent.update === "function") ent.update(delta);
 	}, this);
@@ -97,6 +103,6 @@ g.gameRender = function() {
 		if (typeof ent.postRenderer === "function") ent.postRenderer();
 	}, this);
 
-	if (g.state=="gameOver") g.halt();
+	if (g.state=="gameOver") g.halt(g.state);
 	
 };

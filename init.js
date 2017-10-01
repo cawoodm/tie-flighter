@@ -44,9 +44,10 @@ PIXI.loader
 	.add("sprites", "./resources/sprites/sprites.png")
 	.add("enemies", "./resources/sprites/enemies.sprites.json")
 	.add("explosion", "./resources/sprites/explosion.sprites.json")
-	.add("sfxLaser0", "./resources/sfx/sfx.laser0.mp3")
-	.add("sfxExplosion0", "./resources/sfx/sfx.explosion0.mp3")
-	.add("sfxExplosion1", "./resources/sfx/sfx.explosion1.mp3")
+	.add("sfxLaser0", "./resources/sounds/sfx.laser0.mp3")
+	.add("sfxExplosion0", "./resources/sounds/sfx.explosion0.mp3")
+	.add("sfxExplosion1", "./resources/sounds/sfx.explosion1.mp3")
+	.add("musicBg0", "./resources/sounds/music.bg0.mp3")
 	.load(function(loader, resources) {
 		g.resources = resources;
 		g.ui.sprites.base = resources.sprites.texture.baseTexture;
@@ -57,6 +58,7 @@ PIXI.loader
 		resources.sfxLaser0.sound.volume = 0.5;
 		resources.sfxExplosion0.sound.volume = 0.5;
 		resources.sfxExplosion1.sound.volume = 0.5;
+		resources.musicBg0.sound.volume = 0.15;
 		Enemies.initSprites();
 		g.restart();
 	});

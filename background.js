@@ -9,7 +9,7 @@ Background.prototype.init = function() {
 }
 Background.drawFloorGrid = function() {
 	g.ctx.save();
-	g.ctx.strokeStyle="rgba(100, 100, 100, 0.2)";
+	g.ctx.strokeStyle="rgba(100, 100, 100, 0.3)";
 	for (let x=0; x<g.ui.width; x+=5) {
 		g.ctx.moveTo(x, g.ui.horizon);
 		let d = (g.ui.width/2-x)*40;

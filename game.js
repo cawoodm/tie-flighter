@@ -36,10 +36,8 @@ g.restart = function() {
 		,level1: {entities: []}
 	};
 	g.scene = g.scenes.level1;
-	g.scene.entities.push(new Background());
-	//g.entity.add(new Bullet());
-	g.player = new Player();
-	g.entity.add(g.player);
+	g.entity.add(new Background());
+	g.player = g.entity.add(new Player());
 	g.entity.add(new Starfield());
 	Enemies.add();
 	g.start();
@@ -48,6 +46,7 @@ g.entity.add = function(ent) {
 	g.scene.entities.push(ent);
 	if (typeof ent.renderer === "undefined") g.ui.stage.addChild(ent);
 	if (typeof ent.init === "function") ent.init();
+	return ent;
 };
 g.entity.remove = function(ent) {
 	ent.destroy();
@@ -61,9 +60,10 @@ g.gameOver = function() {
 	let go = new PIXI.Sprite(g.ui.sprites.gameOver);
 	go.anchor = {x:0.5, y:0.5};
 	go.tag="gameOver";
+	go.scale = new PIXI.Point(2,2);
 	go.interactive=true;
 	go.x = g.ui.width/2;
-	go.y = g.ui.height/2;
+	go.y = g.ui.height/3;
 	g.ui.stage.addChild(go);
 	go.on("click", function() {g.restart()});
 };
@@ -74,19 +74,19 @@ g.gameUpdate = function(delta) {
 };
 g.gameRender = function() {
 	
-	if (g.fpsMeter) g.fpsMeter.tick();
-
 	g.ctx.clearRect(0, 0, g.ui.canvas.width, g.ui.canvas.height);
 	
 	g.scene.entities.forEach(function(ent) {
 		if (typeof ent.renderer === "function") ent.renderer(g.ctx);
 	}, this);
 	
+	g.drawGrid0();
+	
 	g.ctx.save();
 	g.ui.renderer.render(g.ui.stage);
 	g.ctx.restore();
 
-	g.drawGrid();
+	g.drawGrid1();
 	
 	g.scene.entities.forEach(function(ent) {
 		if (typeof ent.postRenderer === "function") ent.postRenderer();
@@ -95,16 +95,30 @@ g.gameRender = function() {
 	if (g.state=="gameOver") g.halt();
 	
 };
-g.drawGrid = function() {
+g.drawGrid0 = function() {
 	g.ctx.save();
-	g.ctx.strokeStyle="#ddd";
-	for (let x=0; x<g.ui.width; x+=10) {
-		g.ctx.moveTo(x, 0);
-		g.ctx.lineTo(x, g.ui.height);
+	g.ctx.strokeStyle="rgba(100, 100, 100, 0.5)";
+	for (let x=0; x<g.ui.width; x+=5) {
+		g.ctx.moveTo(x, g.ui.horizon);
+		let d = (g.ui.width/2-x)*30;
+		g.ctx.lineTo(g.ui.width/2-d, g.ui.height);
 	}
-	for (let y=0; y<g.ui.height; y+=10) {
+	let d = 1;
+	for (let y=g.ui.horizon; y<g.ui.height; y+=d) {
+		g.ctx.moveTo(0, y);
+		g.ctx.lineTo(g.ui.width, y);
+		d+=10;
+	}
+	g.ctx.stroke();
+	g.ctx.restore();
+}
+g.drawGrid1 = function() {
+	g.ctx.save();
+	g.ctx.strokeStyle="rgba(1, 1, 1, 0.5)";
+	for (let y=0; y<g.ui.height; y+=3) {
 		g.ctx.moveTo(0, y);
 		g.ctx.lineTo(g.ui.width, y);
 	}
+	g.ctx.stroke();
 	g.ctx.restore();
 }

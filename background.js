@@ -3,7 +3,7 @@ function Background() {
 }
 Background.prototype = Object.create(PIXI.Graphics.prototype);
 Background.prototype.init = function() {
-	this.lineStyle(2, 0x0000FF, 1);
-	this.drawRect(0, 0, g.ui.canvas.width-1, g.ui.canvas.height-2);
+	this.lineStyle(2, 0xFF0000, 1);
+	this.drawRect(1, 1, g.ui.canvas.width-2, g.ui.canvas.height-2);
 	g.ui.stage.addChild(this);
 }

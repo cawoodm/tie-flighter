@@ -8,6 +8,8 @@ function Enemies(num) {
 	this.spacing = 30;
 	this.scaler = 0.2; //100/this.tex.width;
 	this.visible = false;
+	this.delay = -100;
+	this.enemies = 0;
 	for (let i=0; i < num.x; i++) {
 		this.guys[i] = [];
 		for (let j=0; j < num.y; j++) {
@@ -16,17 +18,19 @@ function Enemies(num) {
 			guy.y = this.scaler*(this.tex.height + this.spacing) * j;
 			guy.tag = i+","+j;
 			guy.scale = new PIXI.Point(this.scaler, this.scaler);
+			this.enemies++;
 			this.addChild(guy);
 		}
 	}
-	this.x = g.ui.width/2 - this.width/2;
-	this.y = g.ui.horizon;
+	this.myWidth = this.children[this.children.length-1].x+this.children[this.children.length-1].width;
+	this.x = g.ui.width/2 - this.myWidth/2;
+	this.y = g.ui.horizon;// - this.height/2;
 	this.tag = "enemies";
 }
 Enemies.add = function(options) {
 	let o = options||{};
-	o.x = o.x||rnd(3,8);
-	o.y = o.y||rnd(1,2);
+	o.x = o.x||rnd(1,4);
+	o.y = o.y||rnd(10-o.x,5-o.x);
 	o.num = o.num||rnd(0,53);
 	if (g.enemies && g.enemies.children) g.entity.remove(g.enemies);
 	g.enemies = new Enemies(o);
@@ -60,12 +64,13 @@ Enemies.doExplosion = function(options) {
 };
 Enemies.prototype = Object.create(PIXI.Container.prototype);
 Enemies.prototype.update = function() {
-	if (this.freeze) return;
+	if (this.freeze || this.children.length==0) return;
+	if (this.delay++<0) return;
 	this.visible = true;
-	let d = 0.8 + 0.5*(this.y - g.ui.horizon)/g.ui.horizon;
+	let d = 0.5 + 0.5*(this.y - g.ui.horizon)/g.ui.horizon;
 	this.scale = new PIXI.Point(d,d);
-	this.myWidth = (this.children[0].width)*this.num.x + this.spacing*d;
-	this.x = g.ui.width/2 - this.myWidth/2;
+	this.myWidth = (this.children[0].width + this.spacing)*d*this.num.x;
+	this.x = g.ui.width/2 - this.width/2;
 	this.y += this.speed; 
 	if (this.y + this.height > g.ui.playzone-g.player.height/2) {
 		// Game Over
@@ -73,10 +78,9 @@ Enemies.prototype.update = function() {
 		Enemies.doExplosion({
 			x: g.player.x
 			,y: g.player.y
-			,scale: g.player.scale.x
+			,scale: 3
 			,complete: "gameOver"
 		});
-		g.entity.remove(g.player);
 	}
 };
 Enemies.prototype.collision = function(bb) {
@@ -86,7 +90,9 @@ Enemies.prototype.collision = function(bb) {
 		if (enemy.alpha==0) continue;
 		let ab = enemy.getBounds();
 		if (ab.x + ab.width > bb.x && ab.x < bb.x + bb.width && ab.y + ab.height > bb.y && ab.y < bb.y + bb.height) {
-			enemy.destroy();
+			//enemy.destroy();
+			enemy.alpha = 0;
+			this.enemies--;
 			Enemies.doExplosion({
 				x:ab.x+ab.width/2
 				,y:ab.y+ab.height/2
@@ -98,7 +104,7 @@ Enemies.prototype.collision = function(bb) {
 		if (collided) break;
 	}
 	if (!collided) return;
-	if (this.children.length==0) {
+	if (this.enemies==0||this.children.length==0) {
 		Enemies.add();
 	}
 	return true;

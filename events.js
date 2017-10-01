@@ -8,18 +8,20 @@ g.ui.keys = {
 };
 
 g.ui.keys.left.down = function() {
+	if (g.state!="play") return;
 	if(g.player.acc.x>-0.2) g.player.acc.x -= 0.1;
 	if (g.player.speed.x>=0) {g.player.acc.x = -0.1; g.player.speed.x = -0.75;}
 	//dp("Left", g.player.speed.x,g.player.acc.x);
 };
 g.ui.keys.right.down = function() {
+	if (g.state!="play") return;
 	if(g.player.acc.x<0.2) g.player.acc.x += 0.1;
 	if (g.player.speed.x<=0) {g.player.acc.x = 0.1; g.player.speed.x = 0.75;}
 	//dp("Right", g.player.speed.x,g.player.acc.x);
 };
 g.ui.keys.fire.press = function(e) {
-	if (g.state=="gameOver") return;
-	if (e.ctrlKey) {
+	if (g.state!="play") return;
+	if (e && e.ctrlKey) {
 		//Enemies.add();
 		return;
 	}

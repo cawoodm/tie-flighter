@@ -25,8 +25,8 @@ Starfield.prototype.renderer = function(ctx) {
 	ctx.save();
 	ctx.fillStyle="#000";
 	ctx.strokeStyle="#FFF";
-	let mouse_x=0;//(g.player.position.x-this.w/2)/8; // Horizontal angle of stars
-	let mouse_y=10; // Vertical angle of stars
+	let mouse_x=0;
+	let mouse_y=10;
 	let w = this.w;
 	let h = this.h;
 	let x = this.x;
@@ -51,6 +51,4 @@ Starfield.prototype.renderer = function(ctx) {
 		}
 	}
 	ctx.restore();
-}
-Starfield.prototype.render2 = function() {
 }

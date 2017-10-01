@@ -1,111 +1,75 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-	<title>pixi.js example 11 RenderTexture</title>
-	<style>
-		body {
-			margin: 0;
-			padding: 0;
-			background-color: #000000;
-		}
-	</style>
-	
-	
-	<script src="functions.js"></script>
-	<script src="pixi1.2.js"></script>
 </head>
 <body>
-	<script>
+<script>
+var canvas = document.createElement("canvas")
+canvas.width = 400;
+canvas.height = 400;
+var ctx = canvas.getContext("2d");
+document.body.appendChild(canvas);
 
-
-	// create an new instance of a pixi stage
-	var stage = new PIXI.Stage(0x000000);
-
-
-	// create a renderer instance
-	var renderer = new PIXI.autoDetectRenderer(800, 600);
-	
-	renderer.view.style.width = window.innerWidth + "px";
-	renderer.view.style.height = window.innerHeight + "px";
-	
-	renderer.view.style.display = "block"
-	 
-	document.body.appendChild(renderer.view);
-
+var stars = new Starfield(canvas.width, canvas.height);
+function animate() {
 	requestAnimationFrame(animate);
+	ctx.fillStyle="#000";
+	ctx.fillRect(0, 0, canvas.width, canvas.height);
+	stars.renderer(ctx);
+}
+requestAnimationFrame(animate);
 
-	var renderTexture = new PIXI.RenderTexture(800, 600);
-	var renderTexture2 = new PIXI.RenderTexture(800, 600);
-	
-	var currentTexture = renderTexture;
-	
-	var outputSprite = new PIXI.Sprite(currentTexture);
-	outputSprite.position.x = 800/2;
-	outputSprite.position.y = 600/2;
-	
-	outputSprite.anchor.x = 0.5;
-	outputSprite.anchor.y = 0.5;
-	
-	stage.addChild(outputSprite);
-	
-	var bunnyContainer = new PIXI.DisplayObjectContainer();
-	
-	bunnyContainer.position.x = 800/2;
-	bunnyContainer.position.y = 600/2
-	
-	stage.addChild(bunnyContainer);
-	var fruits = ["spinObj_01.png", "spinObj_02.png",
-					"spinObj_03.png", "spinObj_04.png",
-					"spinObj_05.png", "spinObj_06.png",
-					"spinObj_07.png", "spinObj_08.png"];
-	
-	var bunnys = [];
-	
-	for (var i=0; i < 20; i++) 
-	{
-		var bunny = PIXI.Sprite.fromImage(fruits[i % fruits.length]);
-		bunny.position.x = Math.random() * 400 - 200;
-		bunny.position.y = Math.random() * 400 - 200;
-		
-		bunny.anchor.x = 0.5;
-		bunny.anchor.y = 0.5;
-		
-		bunnyContainer.addChild(bunny);
-		bunnys.push(bunny);
-	};
-
-	
-	var count = 0;
-	var score = 0;
-	
-	var count2 = 0;
-	
-	function animate() {
-
-    requestAnimationFrame( animate );
-		
-		for (var i=0; i < bunnys.length; i++) 
-		{
-			var bunny = bunnys[i];
-			bunny.rotation += 0.1;
-		};
-		
-		count += 0.01;
-		count2 ++;
-		
-		var temp = renderTexture;
-		renderTexture = renderTexture2;
-		renderTexture2 = temp;
-
-		bunnyContainer.rotation -= 0.01
-		renderTexture.render(stage, true);
-		outputSprite.setTexture(renderTexture);
-    outputSprite.scale.x = outputSprite.scale.y  = 1 + Math.sin(count) * 0.2;
-    dp(count, outputSprite.scale.x)
-		renderTexture2.render(stage, false);
-	    renderer.render(stage);
+function Starfield(width, height) {
+	this.stars = [];
+	let n = this.n = 200;
+	this.ratio=256;
+	this.speed=2;
+	let w = this.w = width;
+	let h = this.h = height;
+	let x = this.x=Math.round(w/2);
+	let y = this.y=Math.round(h/2);
+	let z = this.z=(w+h)/2;
+	this.star_color_ratio=1/z;
+	for (let i=0; i < n; i++) {
+		this.stars[i]=new Array(5);
+		this.stars[i][0]=Math.random()*w*2-x*2;
+		this.stars[i][1]=Math.random()*h*2-y*2;
+		this.stars[i][2]=Math.round(Math.random()*z);
+		this.stars[i][3]=0;
+		this.stars[i][4]=0;
 	}
-	   
+}
+Starfield.prototype.renderer = function(ctx) {
+	ctx.save();
+	ctx.fillStyle="#000";
+	ctx.strokeStyle="#FFF";
+	let mouse_x=0;
+	let mouse_y=10;
+	let w = this.w;
+	let h = this.h;
+	let x = this.x;
+	let y = this.y;
+	let z = this.z;
+	for(let i=0; i<this.n; i++) 	{
+		let test=true;
+		let star_x_save=this.stars[i][3];
+		let star_y_save=this.stars[i][4];
+		this.stars[i][0]+=mouse_x>>4; if(this.stars[i][0]>x<<1) { this.stars[i][0]-=w<<1; test=false; } if(this.stars[i][0]<-x<<1) { this.stars[i][0]+=w<<1; test=false; }
+		this.stars[i][1]+=mouse_y>>4; if(this.stars[i][1]>y<<1) { this.stars[i][1]-=h<<1; test=false; } if(this.stars[i][1]<-y<<1) { this.stars[i][1]+=h<<1; test=false; }
+		this.stars[i][2]-=this.speed; if(this.stars[i][2]>z) { this.stars[i][2]-=z; test=false; } if(this.stars[i][2]<0) { this.stars[i][2]+=z; test=false; }
+		this.stars[i][3]=x+(this.stars[i][0]/this.stars[i][2])*this.ratio;
+		this.stars[i][4]=y+(this.stars[i][1]/this.stars[i][2])*this.ratio;
+		if(star_x_save > 0 && star_x_save < this.w && star_y_save>0 && star_y_save < this.h && test) {
+			ctx.lineWidth=(1-this.star_color_ratio*this.stars[i][2])*2;
+			ctx.beginPath();
+			ctx.moveTo(star_x_save,star_y_save);
+			ctx.lineTo(this.stars[i][3],this.stars[i][4]);
+			ctx.stroke();
+			ctx.closePath();
+		}
+	}
+	ctx.restore();
+}
 	</script>
 
 	</body>

@@ -15,6 +15,7 @@ g.pause=function() {
 		g.ticker.start();
 	} else {
 		g.ticker.stop();
+		g.music.stop();
 		g.state="pause";
 	}
 };
@@ -26,32 +27,46 @@ g.step=function() {
 	g.gameUpdate(1);
 	g.gameRender();
 }
-g.restart = function() {
+g.restart = function(title) {
 	// Cleanup
 	if (g.scene) {
 		g.ui.stage.removeChildren();
 		g.scene.entities.length = 0;
 	}
-	// New Game
-	g.state="play";
-	g.points=0;
-	g.difficulty=1;
-	g.scenes = {
-		menu: {entities: []}
-		,level1: {entities: []}
-	};
-	g.scene = g.scenes.level1;
-	g.entity.add(new Background());
-	g.player = g.entity.add(new Player());
-	g.entity.add(new Starfield());
-	g.pointsText = g.entity.add(new PIXI.Text(g.points, {
-		fontFamily : "Arial", fontSize: 24, fill : 0xffffff, align: "right"
-	}));
-	g.pointsText.x = g.ui.width-30;
-	g.pointsText.y = 10;
-	Enemies.add();
-	g.resources.musicBg0.sound.play({loop:true});
-	g.start();
+	if (title) {
+		g.state="title";
+		g.scenes = {
+			title: {entities: []}
+		};
+		g.scene = g.scenes.title;
+		g.entity.add(new Background());
+		g.entity.add(new Starfield());
+		g.title = g.entity.add(new PIXI.Sprite(g.ui.sprites.title));
+		g.title.anchor = {x:0.5, y:0.5};
+		g.title.x = g.ui.width/2;
+		g.title.y = g.ui.height/3;
+		g.gameRender();
+	} else {
+		// New Game
+		g.state="play";
+		g.points=0;
+		g.difficulty=1;
+		g.scenes = {
+			level1: {entities: []}
+		};
+		g.scene = g.scenes.level1;
+		g.entity.add(new Background());
+		g.player = g.entity.add(new Player());
+		g.entity.add(new Starfield());
+		g.pointsText = g.entity.add(new PIXI.Text(g.points, {
+			fontFamily : "Arial", fontSize: 24, fill : 0xffff00, align: "right"
+		}));
+		g.pointsText.x = g.ui.width-30;
+		g.pointsText.y = 10;
+		Enemies.add();
+		g.resources.musicBg0.sound.play({loop:true});
+		g.start();
+	}
 };
 g.entity.add = function(ent) {
 	g.scene.entities.push(ent);

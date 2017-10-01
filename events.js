@@ -20,7 +20,7 @@ g.ui.keys.right.down = function() {
 	//dp("Right", g.player.speed.x,g.player.acc.x);
 };
 g.ui.keys.fire.press = function(e) {
-	if (g.state=="gameOver") return g.restart();
+	if (g.state=="gameOver" || g.state=="title") return g.restart();
 	if (g.state!="play") return;
 	if (e && e.ctrlKey) {
 		//Enemies.add();

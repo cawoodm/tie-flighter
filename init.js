@@ -54,12 +54,14 @@ PIXI.loader
 		g.ui.sprites.enemies = resources.enemies.textures;
 		g.ui.sprites.player = new PIXI.Texture(g.ui.sprites.base, new PIXI.Rectangle(0, 0, 160, 110));
 		g.ui.sprites.bullet = new PIXI.Texture(g.ui.sprites.base, new PIXI.Rectangle(0, 110, 60, 110));
-		g.ui.sprites.gameOver = new PIXI.Texture(g.ui.sprites.base, new PIXI.Rectangle(0, 220, 220, 110));
+		g.ui.sprites.gameOver = new PIXI.Texture(g.ui.sprites.base, new PIXI.Rectangle(0, 221, 220, 111));
+		g.ui.sprites.title = new PIXI.Texture(g.ui.sprites.base, new PIXI.Rectangle(0, 333, 400, 110));
 		resources.sfxLaser0.sound.volume = 0.5;
 		resources.sfxExplosion0.sound.volume = 0.5;
 		resources.sfxExplosion1.sound.volume = 0.5;
 		resources.musicBg0.sound.volume = 0.15;
+		g.music = resources.musicBg0.sound;
 		Enemies.initSprites();
-		g.restart();
+		g.restart(true);
 	});
 	

@@ -40611,26 +40611,28 @@ function Background() {
 }
 Background.prototype = Object.create(PIXI.Graphics.prototype);
 Background.prototype.init = function() {
-	this.lineStyle(2, 0xFFFF00, 1);
-	this.drawRect(1, 1, g.ui.canvas.width-2, g.ui.canvas.height-2);
+	this.lineStyle(2, 0x333333, 1);
+	this.drawRect(0, 0, g.ui.canvas.width-1, g.ui.canvas.height-1);
 	g.ui.stage.addChild(this);
 }
-Background.drawFloorGrid = function() {
-	g.ctx.save();
-	g.ctx.strokeStyle="rgba(100, 100, 100, 0.3)";
+Background.prototype.renderer = function(ctx) {
+	ctx.save();
+	ctx.fillStyle="#000";
+	ctx.fillRect(1, 1, g.ui.canvas.width, g.ui.canvas.height);
+	ctx.strokeStyle="rgba(100, 100, 100, 0.3)";
 	for (let x=0; x<g.ui.width; x+=5) {
-		g.ctx.moveTo(x, g.ui.horizon);
+		ctx.moveTo(x, g.ui.horizon);
 		let d = (g.ui.width/2-x)*40;
-		g.ctx.lineTo(g.ui.width/2-d, g.ui.height);
+		ctx.lineTo(g.ui.width/2-d, g.ui.height);
 	}
 	let d = 1;
 	for (let y=g.ui.horizon; y<g.ui.height; y+=d) {
-		g.ctx.moveTo(0, y);
-		g.ctx.lineTo(g.ui.width, y);
+		ctx.moveTo(0, y);
+		ctx.lineTo(g.ui.width, y);
 		d+=10;
 	}
-	g.ctx.stroke();
-	g.ctx.restore();
+	ctx.stroke();
+	ctx.restore();
 }
 Background.drawHazeGrid = function() {
 	g.ctx.save();
@@ -40644,8 +40646,6 @@ Background.drawHazeGrid = function() {
 }/*global Starfield */
 function Starfield() {
 	this.stars = [];
-}
-Starfield.prototype.init = function() {
 	let n = this.n = 200;
 	this.ratio=256;
 	this.speed=2;
@@ -40666,8 +40666,6 @@ Starfield.prototype.init = function() {
 }
 Starfield.prototype.renderer = function(ctx) {
 	ctx.save();
-	ctx.fillStyle="#000";
-	ctx.fillRect(1, 1, g.ui.canvas.width, g.ui.canvas.height);
 	ctx.strokeStyle="#FFF";
 	let mouse_x=0;
 	let mouse_y=10;
@@ -40725,10 +40723,11 @@ Player.prototype.update = function(delta) {
 }
 Player.prototype.postRenderer = function() {
 	//let box = new PIXI.Rectangle(this.x-this.collider.width/2, this.y-this.collider.height/2,this.collider.width, this.collider.height);
+	if (!g.enemies) return;
 	if (g.enemies.collision(this, "player")) this.dieNext=true;
 }
 Player.prototype.setPosition = function(pos,a) {
-	if (pos.x<0) return; // Mobile device
+	if (pos.x<0) return;
 	this.position.x = Math.max(this.width/2, Math.min(pos.x, g.ui.width-this.width/2))
 }
 /*global Vector*/
@@ -40750,7 +40749,7 @@ function Bullet(pos) {
 	this.speed = new Vector(this.dx / this.lifetime,this.dy / this.lifetime);
 	this.rotation = Math.PI / 2 + Math.atan2(this.dy, this.dx);
 	this.zOrder = g.player.zOrder - 1;
-	g.resources.sfxLaser0.sound.play();
+	if (g.state=="play") g.resources.sfxLaser0.sound.play();
 }
 Bullet.prototype = Object.create(PIXI.Sprite.prototype);
 Bullet.prototype.update = function() {
@@ -40762,6 +40761,7 @@ Bullet.prototype.update = function() {
 	this.y += this.speed.y;
 }
 Bullet.prototype.postRenderer = function() {
+	if (!g.enemies) return;
 	let box = new PIXI.Rectangle(this.x-this.collider.width/2, this.y-this.collider.height/2,this.collider.width, this.collider.height);
 	if (g.enemies.collision(box)) {
 		g.points++;
@@ -40931,6 +40931,10 @@ g.restart = function(title) {
 		g.scene = g.scenes.title;
 		g.entity.add(new Background());
 		g.entity.add(new Starfield());
+		g.player = g.entity.add(new Player());
+		g.player.x = g.ui.width*2/3;
+		g.player.y = g.ui.playzone;
+		g.entity.add(new Bullet({x: g.ui.width*2/3, y: g.ui.playzone-150}));
 		g.title = g.entity.add(new PIXI.Sprite(g.ui.sprites.title));
 		g.title.anchor = {x:0.5, y:0.5};
 		g.title.x = g.ui.width/2;
@@ -40996,14 +41000,10 @@ g.gameRender = function() {
 		if (typeof ent.renderer === "function") ent.renderer(g.ctx);
 	}, this);
 	
-	Background.drawFloorGrid();
-	
 	g.ctx.save();
 	g.ui.renderer.render(g.ui.stage);
 	g.ctx.restore();
 
-	//if (g.state=="gameOver") Background.drawHazeGrid();
-	
 	g.scene.entities.forEach(function(ent) {
 		if (typeof ent.postRenderer === "function") ent.postRenderer();
 	}, this);

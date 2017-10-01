@@ -28,9 +28,10 @@ Player.prototype.update = function(delta) {
 }
 Player.prototype.postRenderer = function() {
 	//let box = new PIXI.Rectangle(this.x-this.collider.width/2, this.y-this.collider.height/2,this.collider.width, this.collider.height);
+	if (!g.enemies) return;
 	if (g.enemies.collision(this, "player")) this.dieNext=true;
 }
 Player.prototype.setPosition = function(pos,a) {
-	if (pos.x<0) return; // Mobile device
+	if (pos.x<0) return;
 	this.position.x = Math.max(this.width/2, Math.min(pos.x, g.ui.width-this.width/2))
 }

@@ -41,6 +41,10 @@ g.restart = function(title) {
 		g.scene = g.scenes.title;
 		g.entity.add(new Background());
 		g.entity.add(new Starfield());
+		g.player = g.entity.add(new Player());
+		g.player.x = g.ui.width*2/3;
+		g.player.y = g.ui.playzone;
+		g.entity.add(new Bullet({x: g.ui.width*2/3, y: g.ui.playzone-150}));
 		g.title = g.entity.add(new PIXI.Sprite(g.ui.sprites.title));
 		g.title.anchor = {x:0.5, y:0.5};
 		g.title.x = g.ui.width/2;
@@ -106,14 +110,10 @@ g.gameRender = function() {
 		if (typeof ent.renderer === "function") ent.renderer(g.ctx);
 	}, this);
 	
-	Background.drawFloorGrid();
-	
 	g.ctx.save();
 	g.ui.renderer.render(g.ui.stage);
 	g.ctx.restore();
 
-	//if (g.state=="gameOver") Background.drawHazeGrid();
-	
 	g.scene.entities.forEach(function(ent) {
 		if (typeof ent.postRenderer === "function") ent.postRenderer();
 	}, this);

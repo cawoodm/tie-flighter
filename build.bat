@@ -30,7 +30,7 @@ DEL /Q /S release\*.json
 DEL /Q /S release\*.mp3
 XCOPY resources\* release\resources /Y /S
 ECHO Ready to test in release\ folder
-PAUSE
+::PAUSE
 
 :: Commit local changes
 git add .
@@ -43,7 +43,7 @@ DEL /Q /S %PUB%\*.json
 DEL /Q /S %PUB%\*.mp3
 XCOPY .\release\*.* %PUB% /Y /S
 ECHO Ready to test in %PUB% folder
-PAUSE
+::PAUSE
 
 :: Publish to github
 CD %PUB%

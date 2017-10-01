@@ -2,6 +2,8 @@
 SETLOCAL
 CD %dp0%
 
+SET PUB=..\..\..\cawoodm.github.io\tie-flighter
+
 SET STR=%~1
 IF "%STR%"=="" (SET STR=Build %date% %time%)
 
@@ -22,9 +24,12 @@ TYPE game.js >> app.js
 :: Prepare release
 COPY /Y app.js release\
 DEL /Q app.js
+DEL /Q /S release\*.png
+DEL /Q /S release\*.json
+DEL /Q /S release\*.mp3
 XCOPY resources\* release\resources /Y /S
-ECHO "Ready to test in release\ folder"
-::PAUSE
+ECHO Ready to test in release\ folder
+PAUSE
 
 :: Commit local changes
 git add .
@@ -32,11 +37,15 @@ git commit -m "%STR%"
 git push origin master
 
 :: Copy to local cawoodm github site
-XCOPY .\release\*.* ..\..\..\cawoodm.github.io\tie-flighter /Y /S
+DEL /Q /S %PUB%\*.png
+DEL /Q /S %PUB%\*.json
+DEL /Q /S %PUB%\*.mp3
+XCOPY .\release\*.* %PUB% /Y /S
+ECHO Ready to test in %PUB% folder
 PAUSE
 
 :: Publish to github
-CD ..\..\..\cawoodm.github.io\tie-flighter
+CD %PUB%
 git add .
 git commit -m "%STR%""
 git push origin master

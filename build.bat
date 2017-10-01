@@ -11,6 +11,7 @@ IF "%STR%"=="" (SET STR=Build %date% %time%)
 TYPE functions.js >> app.js
 TYPE utils.js >> app.js
 TYPE pixi.js >> app.js
+TYPE pixi-sound.js >> app.js
 TYPE ticker.js >> app.js
 TYPE init.js >> app.js
 TYPE events.js >> app.js

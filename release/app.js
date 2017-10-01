@@ -40497,15 +40497,18 @@ g.ui.renderer.render(g.ui.stage)
 g.ui.interaction = new PIXI.interaction.InteractionData();
 //window.setInterval(dpuu, 100);
 //window.DEBUG=1;
-g.fpsMeter = new FPSMeter($("#debug"), {graph: 1, history: 20, theme: "transparent", heat: 1});
 
 PIXI.loader
-	.add("sprites", "sprites.png")
-	.add("enemies", "enemies.sprites.json")
-	.add("explosion", "explosion.sprites.json")
-	.load(function() {
-		g.ui.sprites.base = PIXI.loader.resources.sprites.texture.baseTexture;
-		g.ui.sprites.enemies = PIXI.loader.resources.enemies.textures;
+	.add("sprites", "./resources/sprites/sprites.png")
+	.add("enemies", "./resources/sprites/enemies.sprites.json")
+	.add("explosion", "./resources/sprites/explosion.sprites.json")
+	.add("sfxLaser0", "./resources/sfx/sfx.laser0.mp3")
+	.add("sfxExplosion0", "./resources/sfx/sfx.explosion0.mp3")
+	.add("sfxExplosion1", "./resources/sfx/sfx.explosion1.mp3")
+	.load(function(loader, resources) {
+		g.resources = resources;
+		g.ui.sprites.base = resources.sprites.texture.baseTexture;
+		g.ui.sprites.enemies = resources.enemies.textures;
 		g.ui.sprites.player = new PIXI.Texture(g.ui.sprites.base, new PIXI.Rectangle(0, 0, 160, 110));
 		g.ui.sprites.bullet = new PIXI.Texture(g.ui.sprites.base, new PIXI.Rectangle(0, 110, 60, 110));
 		g.ui.sprites.gameOver = new PIXI.Texture(g.ui.sprites.base, new PIXI.Rectangle(0, 220, 220, 110));
@@ -40534,13 +40537,14 @@ g.ui.keys.right.down = function() {
 	//dp("Right", g.player.speed.x,g.player.acc.x);
 };
 g.ui.keys.fire.press = function(e) {
+	if (g.state=="gameOver") return g.restart();
 	if (g.state!="play") return;
 	if (e && e.ctrlKey) {
 		//Enemies.add();
 		return;
 	}
 	if (g.player.position) {
-		if (e.touches) g.player.setPosition({x:e.touches[0].clientX-g.ui.canvas.offsetLeft},true);
+		if (e && e.touches) g.player.setPosition({x:e.touches[0].clientX-g.ui.canvas.offsetLeft},true);
 		g.entity.add(new Bullet(g.player.position));
 	}
 }
@@ -40590,11 +40594,37 @@ function Background() {
 }
 Background.prototype = Object.create(PIXI.Graphics.prototype);
 Background.prototype.init = function() {
-	this.lineStyle(2, 0xFF0000, 1);
+	this.lineStyle(2, 0xFFFF00, 1);
 	this.drawRect(1, 1, g.ui.canvas.width-2, g.ui.canvas.height-2);
 	g.ui.stage.addChild(this);
 }
-/*global Starfield */
+Background.drawFloorGrid = function() {
+	g.ctx.save();
+	g.ctx.strokeStyle="rgba(100, 100, 100, 0.2)";
+	for (let x=0; x<g.ui.width; x+=5) {
+		g.ctx.moveTo(x, g.ui.horizon);
+		let d = (g.ui.width/2-x)*40;
+		g.ctx.lineTo(g.ui.width/2-d, g.ui.height);
+	}
+	let d = 1;
+	for (let y=g.ui.horizon; y<g.ui.height; y+=d) {
+		g.ctx.moveTo(0, y);
+		g.ctx.lineTo(g.ui.width, y);
+		d+=10;
+	}
+	g.ctx.stroke();
+	g.ctx.restore();
+}
+Background.drawHazeGrid = function() {
+	g.ctx.save();
+	g.ctx.strokeStyle="rgba(1, 1, 1, 0.8)";
+	for (let y=0; y<g.ui.height; y+=2) {
+		g.ctx.moveTo(0, y);
+		g.ctx.lineTo(g.ui.width, y);
+	}
+	g.ctx.stroke();
+	g.ctx.restore();
+}/*global Starfield */
 function Starfield() {
 	this.stars = [];
 }
@@ -40620,6 +40650,7 @@ Starfield.prototype.init = function() {
 Starfield.prototype.renderer = function(ctx) {
 	ctx.save();
 	ctx.fillStyle="#000";
+	ctx.fillRect(1, 1, g.ui.canvas.width, g.ui.canvas.height);
 	ctx.strokeStyle="#FFF";
 	let mouse_x=0;
 	let mouse_y=10;
@@ -40701,7 +40732,8 @@ function Bullet(pos) {
 	this.lifetime = 20;
 	this.speed = new Vector(this.dx / this.lifetime,this.dy / this.lifetime);
 	this.rotation = Math.PI / 2 + Math.atan2(this.dy, this.dx);
-	this.zOrder = g.player.zOrder - 1
+	this.zOrder = g.player.zOrder - 1;
+	//g.resources.sfxLaser0.sound.play();
 }
 Bullet.prototype = Object.create(PIXI.Sprite.prototype);
 Bullet.prototype.update = function() {
@@ -40714,7 +40746,10 @@ Bullet.prototype.update = function() {
 }
 Bullet.prototype.postRenderer = function() {
 	let box = new PIXI.Rectangle(this.x-this.collider.width/2, this.y-this.collider.height/2,this.collider.width, this.collider.height);
-	if (g.enemies.collision(box)) this.dieNext=true;
+	if (g.enemies.collision(box)) {
+		g.points++;
+		this.dieNext=true;
+	}
 }
 function Enemies(num) {
 	PIXI.Container.call(this);
@@ -40722,6 +40757,7 @@ function Enemies(num) {
 	num.id = num.num||"0";
 	this.num = num;
 	this.speed = num.hasOwnProperty("s")?num.s:0.5;
+	this.acc = 0.005+(0.01*g.difficulty)/(this.num.x*this.num.y);
 	this.tex = g.ui.sprites.enemies[num.id+".png"];
 	this.spacing = 30;
 	this.scaler = 0.2; //100/this.tex.width;
@@ -40786,11 +40822,13 @@ Enemies.prototype.update = function() {
 	if (this.freeze || this.children.length==0) return;
 	if (this.delay++<0) return;
 	this.visible = true;
-	let d = 0.5 + 0.5*(this.y - g.ui.horizon)/g.ui.horizon;
+	let d = 0.5 + 0.9*(this.y - g.ui.horizon)/g.ui.horizon;
 	this.scale = new PIXI.Point(d,d);
 	this.myWidth = (this.children[0].width + this.spacing)*d*this.num.x;
 	this.x = g.ui.width/2 - this.width/2;
 	this.y += this.speed;
+	this.speed+=this.acc;
+	if (this.y>g.ui.height) Enemies.add();
 };
 Enemies.prototype.collision = function(bb, mode) {
 	if (this.freeze || this.children.length==0) return;
@@ -40804,6 +40842,7 @@ Enemies.prototype.collision = function(bb, mode) {
 			if (mode=="player") {
 				// Game Over
 				this.freeze=true;
+				//g.resources.sfxExplosion1.sound.play();
 				Enemies.doExplosion({
 					x: g.player.x
 					,y: g.player.y
@@ -40813,6 +40852,7 @@ Enemies.prototype.collision = function(bb, mode) {
 			} else {
 				enemy.alpha = 0;
 				this.enemies--;
+				//g.resources.sfxExplosion0.sound.play();
 				Enemies.doExplosion({
 					x:ab.x+ab.width/2
 					,y:ab.y+ab.height/2
@@ -40863,6 +40903,7 @@ g.restart = function() {
 		g.scene.entities.length = 0;
 	}
 	g.state="play";
+	g.points=0;
 	g.difficulty=1;
 	// New Game
 	g.scenes = {
@@ -40873,6 +40914,11 @@ g.restart = function() {
 	g.entity.add(new Background());
 	g.player = g.entity.add(new Player());
 	g.entity.add(new Starfield());
+	g.pointsText = g.entity.add(new PIXI.Text(g.points, {
+		fontFamily : "Arial", fontSize: 24, fill : 0xffffff, align: "right"
+	}));
+	g.pointsText.x = g.ui.width-30;
+	g.pointsText.y = 10;
 	Enemies.add();
 	g.start();
 };
@@ -40888,20 +40934,18 @@ g.entity.remove = function(ent) {
 	for(let i=0; i < g.scene.entities.length; i++)
 		if (g.scene.entities[i] == ent) g.scene.entities.splice(i,1);
 };
-
 g.gameOver = function() {
 	g.state="gameOver";
 	let go = new PIXI.Sprite(g.ui.sprites.gameOver);
 	go.anchor = {x:0.5, y:0.5};
 	go.tag="gameOver";
 	go.scale = new PIXI.Point(2,2);
-	go.interactive=true;
 	go.x = g.ui.width/2;
 	go.y = g.ui.height/3;
 	g.ui.stage.addChild(go);
-	go.on("click", function() {g.restart()});
 };
 g.gameUpdate = function(delta) {
+	g.pointsText.text = " ".repeat(3-g.points.toString)+g.points;
 	g.scene.entities.forEach(function(ent) {
 		if (typeof ent.update === "function") ent.update(delta);
 	}, this);
@@ -40914,13 +40958,13 @@ g.gameRender = function() {
 		if (typeof ent.renderer === "function") ent.renderer(g.ctx);
 	}, this);
 	
-	g.drawGrid0();
+	Background.drawFloorGrid();
 	
 	g.ctx.save();
 	g.ui.renderer.render(g.ui.stage);
 	g.ctx.restore();
 
-	//g.drawGrid1();
+	//if (g.state=="gameOver") Background.drawHazeGrid();
 	
 	g.scene.entities.forEach(function(ent) {
 		if (typeof ent.postRenderer === "function") ent.postRenderer();
@@ -40929,30 +40973,3 @@ g.gameRender = function() {
 	if (g.state=="gameOver") g.halt();
 	
 };
-g.drawGrid0 = function() {
-	g.ctx.save();
-	g.ctx.strokeStyle="rgba(100, 100, 100, 0.5)";
-	for (let x=0; x<g.ui.width; x+=5) {
-		g.ctx.moveTo(x, g.ui.horizon);
-		let d = (g.ui.width/2-x)*30;
-		g.ctx.lineTo(g.ui.width/2-d, g.ui.height);
-	}
-	let d = 1;
-	for (let y=g.ui.horizon; y<g.ui.height; y+=d) {
-		g.ctx.moveTo(0, y);
-		g.ctx.lineTo(g.ui.width, y);
-		d+=10;
-	}
-	g.ctx.stroke();
-	g.ctx.restore();
-}
-g.drawGrid1 = function() {
-	g.ctx.save();
-	g.ctx.strokeStyle="rgba(1, 1, 1, 0.5)";
-	for (let y=0; y<g.ui.height; y+=3) {
-		g.ctx.moveTo(0, y);
-		g.ctx.lineTo(g.ui.width, y);
-	}
-	g.ctx.stroke();
-	g.ctx.restore();
-}

@@ -24,6 +24,7 @@ Starfield.prototype.init = function() {
 Starfield.prototype.renderer = function(ctx) {
 	ctx.save();
 	ctx.fillStyle="#000";
+	ctx.fillRect(1, 1, g.ui.canvas.width, g.ui.canvas.height);
 	ctx.strokeStyle="#FFF";
 	let mouse_x=0;
 	let mouse_y=10;

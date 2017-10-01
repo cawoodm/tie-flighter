@@ -22,8 +22,7 @@ TYPE game.js >> app.js
 :: Prepare release
 COPY /Y app.js release\
 DEL /Q app.js
-COPY /Y *.png release\
-COPY /Y *.json release\
+XCOPY resources\* release\resources /Y /S
 ECHO "Ready to test in release\ folder"
 ::PAUSE
 
@@ -33,8 +32,8 @@ git commit -m "%STR%"
 git push origin master
 
 :: Copy to local cawoodm github site
-COPY /Y .\release\*.* ..\..\..\cawoodm.github.io\tie-flighter
-::PAUSE
+XCOPY .\release\*.* ..\..\..\cawoodm.github.io\tie-flighter /Y /S
+PAUSE
 
 :: Publish to github
 CD ..\..\..\cawoodm.github.io\tie-flighter

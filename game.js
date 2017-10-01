@@ -30,6 +30,7 @@ g.restart = function() {
 		g.scene.entities.length = 0;
 	}
 	g.state="play";
+	g.points=0;
 	g.difficulty=1;
 	// New Game
 	g.scenes = {
@@ -40,6 +41,11 @@ g.restart = function() {
 	g.entity.add(new Background());
 	g.player = g.entity.add(new Player());
 	g.entity.add(new Starfield());
+	g.pointsText = g.entity.add(new PIXI.Text(g.points, {
+		fontFamily : "Arial", fontSize: 24, fill : 0xffffff, align: "right"
+	}));
+	g.pointsText.x = g.ui.width-30;
+	g.pointsText.y = 10;
 	Enemies.add();
 	g.start();
 };
@@ -55,20 +61,18 @@ g.entity.remove = function(ent) {
 	for(let i=0; i < g.scene.entities.length; i++)
 		if (g.scene.entities[i] == ent) g.scene.entities.splice(i,1);
 };
-
 g.gameOver = function() {
 	g.state="gameOver";
 	let go = new PIXI.Sprite(g.ui.sprites.gameOver);
 	go.anchor = {x:0.5, y:0.5};
 	go.tag="gameOver";
 	go.scale = new PIXI.Point(2,2);
-	go.interactive=true;
 	go.x = g.ui.width/2;
 	go.y = g.ui.height/3;
 	g.ui.stage.addChild(go);
-	go.on("click", function() {g.restart()});
 };
 g.gameUpdate = function(delta) {
+	g.pointsText.text = " ".repeat(3-g.points.toString)+g.points;
 	g.scene.entities.forEach(function(ent) {
 		if (typeof ent.update === "function") ent.update(delta);
 	}, this);
@@ -81,13 +85,13 @@ g.gameRender = function() {
 		if (typeof ent.renderer === "function") ent.renderer(g.ctx);
 	}, this);
 	
-	g.drawGrid0();
+	Background.drawFloorGrid();
 	
 	g.ctx.save();
 	g.ui.renderer.render(g.ui.stage);
 	g.ctx.restore();
 
-	//g.drawGrid1();
+	//if (g.state=="gameOver") Background.drawHazeGrid();
 	
 	g.scene.entities.forEach(function(ent) {
 		if (typeof ent.postRenderer === "function") ent.postRenderer();
@@ -96,30 +100,3 @@ g.gameRender = function() {
 	if (g.state=="gameOver") g.halt();
 	
 };
-g.drawGrid0 = function() {
-	g.ctx.save();
-	g.ctx.strokeStyle="rgba(100, 100, 100, 0.5)";
-	for (let x=0; x<g.ui.width; x+=5) {
-		g.ctx.moveTo(x, g.ui.horizon);
-		let d = (g.ui.width/2-x)*30;
-		g.ctx.lineTo(g.ui.width/2-d, g.ui.height);
-	}
-	let d = 1;
-	for (let y=g.ui.horizon; y<g.ui.height; y+=d) {
-		g.ctx.moveTo(0, y);
-		g.ctx.lineTo(g.ui.width, y);
-		d+=10;
-	}
-	g.ctx.stroke();
-	g.ctx.restore();
-}
-g.drawGrid1 = function() {
-	g.ctx.save();
-	g.ctx.strokeStyle="rgba(1, 1, 1, 0.5)";
-	for (let y=0; y<g.ui.height; y+=3) {
-		g.ctx.moveTo(0, y);
-		g.ctx.lineTo(g.ui.width, y);
-	}
-	g.ctx.stroke();
-	g.ctx.restore();
-}

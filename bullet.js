@@ -16,7 +16,8 @@ function Bullet(pos) {
 	this.lifetime = 20;
 	this.speed = new Vector(this.dx / this.lifetime,this.dy / this.lifetime);
 	this.rotation = Math.PI / 2 + Math.atan2(this.dy, this.dx);
-	this.zOrder = g.player.zOrder - 1
+	this.zOrder = g.player.zOrder - 1;
+	//g.resources.sfxLaser0.sound.play();
 }
 Bullet.prototype = Object.create(PIXI.Sprite.prototype);
 Bullet.prototype.update = function() {
@@ -29,5 +30,8 @@ Bullet.prototype.update = function() {
 }
 Bullet.prototype.postRenderer = function() {
 	let box = new PIXI.Rectangle(this.x-this.collider.width/2, this.y-this.collider.height/2,this.collider.width, this.collider.height);
-	if (g.enemies.collision(box)) this.dieNext=true;
+	if (g.enemies.collision(box)) {
+		g.points++;
+		this.dieNext=true;
+	}
 }

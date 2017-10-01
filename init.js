@@ -39,15 +39,18 @@ g.ui.renderer.render(g.ui.stage)
 g.ui.interaction = new PIXI.interaction.InteractionData();
 //window.setInterval(dpuu, 100);
 //window.DEBUG=1;
-g.fpsMeter = new FPSMeter($("#debug"), {graph: 1, history: 20, theme: "transparent", heat: 1});
 
 PIXI.loader
-	.add("sprites", "sprites.png")
-	.add("enemies", "enemies.sprites.json")
-	.add("explosion", "explosion.sprites.json")
-	.load(function() {
-		g.ui.sprites.base = PIXI.loader.resources.sprites.texture.baseTexture;
-		g.ui.sprites.enemies = PIXI.loader.resources.enemies.textures;
+	.add("sprites", "./resources/sprites/sprites.png")
+	.add("enemies", "./resources/sprites/enemies.sprites.json")
+	.add("explosion", "./resources/sprites/explosion.sprites.json")
+	.add("sfxLaser0", "./resources/sfx/sfx.laser0.mp3")
+	.add("sfxExplosion0", "./resources/sfx/sfx.explosion0.mp3")
+	.add("sfxExplosion1", "./resources/sfx/sfx.explosion1.mp3")
+	.load(function(loader, resources) {
+		g.resources = resources;
+		g.ui.sprites.base = resources.sprites.texture.baseTexture;
+		g.ui.sprites.enemies = resources.enemies.textures;
 		g.ui.sprites.player = new PIXI.Texture(g.ui.sprites.base, new PIXI.Rectangle(0, 0, 160, 110));
 		g.ui.sprites.bullet = new PIXI.Texture(g.ui.sprites.base, new PIXI.Rectangle(0, 110, 60, 110));
 		g.ui.sprites.gameOver = new PIXI.Texture(g.ui.sprites.base, new PIXI.Rectangle(0, 220, 220, 110));

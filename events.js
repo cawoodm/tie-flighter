@@ -20,13 +20,14 @@ g.ui.keys.right.down = function() {
 	//dp("Right", g.player.speed.x,g.player.acc.x);
 };
 g.ui.keys.fire.press = function(e) {
+	if (g.state=="gameOver") return g.restart();
 	if (g.state!="play") return;
 	if (e && e.ctrlKey) {
 		//Enemies.add();
 		return;
 	}
 	if (g.player.position) {
-		if (e.touches) g.player.setPosition({x:e.touches[0].clientX-g.ui.canvas.offsetLeft},true);
+		if (e && e.touches) g.player.setPosition({x:e.touches[0].clientX-g.ui.canvas.offsetLeft},true);
 		g.entity.add(new Bullet(g.player.position));
 	}
 }

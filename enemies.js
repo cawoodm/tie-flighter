@@ -4,6 +4,7 @@ function Enemies(num) {
 	num.id = num.num||"0";
 	this.num = num;
 	this.speed = num.hasOwnProperty("s")?num.s:0.5;
+	this.acc = 0.005+(0.01*g.difficulty)/(this.num.x*this.num.y);
 	this.tex = g.ui.sprites.enemies[num.id+".png"];
 	this.spacing = 30;
 	this.scaler = 0.2; //100/this.tex.width;
@@ -68,11 +69,13 @@ Enemies.prototype.update = function() {
 	if (this.freeze || this.children.length==0) return;
 	if (this.delay++<0) return;
 	this.visible = true;
-	let d = 0.5 + 0.5*(this.y - g.ui.horizon)/g.ui.horizon;
+	let d = 0.5 + 0.9*(this.y - g.ui.horizon)/g.ui.horizon;
 	this.scale = new PIXI.Point(d,d);
 	this.myWidth = (this.children[0].width + this.spacing)*d*this.num.x;
 	this.x = g.ui.width/2 - this.width/2;
 	this.y += this.speed;
+	this.speed+=this.acc;
+	if (this.y>g.ui.height) Enemies.add();
 };
 Enemies.prototype.collision = function(bb, mode) {
 	if (this.freeze || this.children.length==0) return;
@@ -86,6 +89,7 @@ Enemies.prototype.collision = function(bb, mode) {
 			if (mode=="player") {
 				// Game Over
 				this.freeze=true;
+				//g.resources.sfxExplosion1.sound.play();
 				Enemies.doExplosion({
 					x: g.player.x
 					,y: g.player.y
@@ -95,6 +99,7 @@ Enemies.prototype.collision = function(bb, mode) {
 			} else {
 				enemy.alpha = 0;
 				this.enemies--;
+				//g.resources.sfxExplosion0.sound.play();
 				Enemies.doExplosion({
 					x:ab.x+ab.width/2
 					,y:ab.y+ab.height/2
